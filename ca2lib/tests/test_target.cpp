@@ -44,8 +44,8 @@ void crvlMakeChessboardPattern(cv::Mat &outChessboard, int inRows, int inCols,
   CV_Assert(inRows > 1 && inCols > 1);
   CV_Assert(inSquareSize > 0);
 
-  int chessboardImgCols = inCols * inSquareSize;
-  int chessboardImgRows = inRows * inSquareSize;
+  size_t chessboardImgCols = inCols * inSquareSize;
+  size_t chessboardImgRows = inRows * inSquareSize;
   outChessboard = Mat(chessboardImgRows + 200, chessboardImgCols + 200, CV_8UC3,
                       Scalar(255, 255, 255));
 

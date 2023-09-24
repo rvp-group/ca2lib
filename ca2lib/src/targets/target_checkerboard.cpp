@@ -77,8 +77,7 @@ bool TargetCheckerboard::detectAndCompute(const cv::Mat& frame_,
   if (!detect(frame_)) return false;
   bool ret = false;
   if (dist_coeffs_.cols == 4) {
-    // Equidistant model:
-    // Solve using cv::fisheye stuff
+    // Equidistant model
     std::vector<cv::Point2f> undistorted_corners;
     cv::fisheye::undistortPoints(_corners, undistorted_corners, K_,
                                  dist_coeffs_);
@@ -86,12 +85,9 @@ bool TargetCheckerboard::detectAndCompute(const cv::Mat& frame_,
     ret = cv::solvePnP(_grid_points, undistorted_corners, identity, cv::Mat(),
                        _rvec, _tvec, false, cv::SOLVEPNP_IPPE);
   } else {
-    // rad-tan model:
-    // Solve using cv:: stuff
-    std::cerr << "k=" << K_ << " dist_coeffs=" << dist_coeffs_ << std::endl;
+    // Rad-tan model:
     ret = cv::solvePnP(_grid_points, _corners, K_, dist_coeffs_, _rvec, _tvec,
                        false, cv::SOLVEPNP_IPPE);
-    std::cerr << "computing rvec=" << _rvec << " " << _tvec << std::endl;
   }
   return ret;
 }

@@ -38,16 +38,16 @@
 
 #include <opencv2/highgui.hpp>
 
-void crvlMakeChessboardPattern(cv::Mat &outChessboard, int inRows, int inCols,
-                               int inSquareSize = 100,
+void crvlMakeChessboardPattern(cv::Mat &outChessboard, size_t inRows,
+                               size_t inCols, int inSquareSize = 100,
                                cv::Scalar color1 = cv::Scalar(0, 0, 0),
                                cv::Scalar color2 = cv::Scalar(255, 255, 255)) {
   using namespace cv;
   CV_Assert(inRows > 1 && inCols > 1);
   CV_Assert(inSquareSize > 0);
 
-  int chessboardImgCols = inCols * inSquareSize;
-  int chessboardImgRows = inRows * inSquareSize;
+  size_t chessboardImgCols = inCols * inSquareSize;
+  size_t chessboardImgRows = inRows * inSquareSize;
   outChessboard = Mat(chessboardImgRows + 200, chessboardImgCols + 200, CV_8UC3,
                       Scalar(255, 255, 255));
 
@@ -65,8 +65,8 @@ void crvlMakeChessboardPattern(cv::Mat &outChessboard, int inRows, int inCols,
 }
 
 TEST(ca2lib, ExtractorCheckerboard) {
-  cv::Mat checkerboard =
-      cv::imread("/home/eg/source/ca2lib/ca2lib/data/6517.png");
+  cv::Mat checkerboard;
+  crvlMakeChessboardPattern(checkerboard, 8, 12);
 
   std::shared_ptr<ca2lib::TargetBase> target_ptr =
       std::make_shared<ca2lib::TargetCheckerboard>(7, 11, 0.1);
@@ -91,11 +91,6 @@ TEST(ca2lib, ExtractorCheckerboard) {
 
   cv::Mat detection = checkerboard.clone();
   target_ptr->drawDetection(detection);
-
-  cv::imshow("detection", detection);
-  cv::waitKey(0);
-
-  std::cerr << extractor.plane().transpose() << std::endl;
 }
 
 int main(int argc, char **argv) {
