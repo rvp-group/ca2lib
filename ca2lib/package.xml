@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>ca2lib</name>
+    <version>1.0.0</version>
+    <description>LiDAR-Camera Calibration Toolbox</description>
+    <maintainer email="giacomini@diag.uniroma1.it">Emanuele Giacomini</maintainer>
+    <license>BSD</license>
+    <buildtool_depend>catkin</buildtool_depend>
+    
+    
+    <depend>roscpp</depend>
+    <depend>geometry_msgs</depend>
+    <depend>sensor_msgs</depend>
+    <depend>message_filters</depend>
+    <depend>dynamic_reconfigure</depend>
+    <depend>tf2_ros</depend>
+    <depend>cv_bridge</depend>
+    <depend>rosbag</depend>
+    <depend>srrg_cmake_modules</depend>
+    <depend>srrg2_core</depend>
+    <depend>srrg2_core_ros</depend>
+    <depend>srrg2_solver</depend>
+
+    <test_depend>rosunit</test_depend>
+
+    <export></export>
+</package>
