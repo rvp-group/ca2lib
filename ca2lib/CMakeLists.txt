@@ -38,7 +38,8 @@ add_library(ca2lib
     src/targets/target_charuco.cpp
     src/io/ros.cpp
     src/plane_extractor/plane_extractor_monocular.cpp
-    src/plane_extractor/plane_extractor_lidar.cpp)
+    src/plane_extractor/plane_extractor_lidar.cpp
+    src/projection.cpp)
 
 target_include_directories(ca2lib PUBLIC include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 target_link_libraries(ca2lib PUBLIC ${OpenCV_LIBRARIES} Eigen3::Eigen ${catkin_LIBRARIES})

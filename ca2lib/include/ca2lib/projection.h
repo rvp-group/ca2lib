@@ -1,0 +1,82 @@
+// clang-format off
+
+// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// clang-format on
+
+#pragma once
+#include "types.h"
+
+namespace ca2lib {
+
+/**
+ * @brief Computes projection indices for all the points of cloud_in and returns
+ * a lookup table. The lookup table contains an index for every pixel. The index
+ * may be invalid (-1) or, a positive integer that represents the index of the
+ * point in cloud_in that is projected on that pixel
+ *
+ * The size of the lookup table is automatically infered by the ring field or by
+ * the cloud width/height. If these informations are not available, input rows
+ * and cols are used otherwise.
+ *
+ * @param cloud_in Input cloud
+ * @param hfov [Optional] Horizontal Field of View of the LiDAR (assumed 2*pi)
+ * @param rows [Optional] Number of rows in the lut table (equal to no. rings)
+ * @param cols [Optional] Number of columns in the lut table
+ * @return cv::Mat LUT table
+ */
+cv::Mat projectLidarLUT(const PointCloudXf& cloud_in, const float hfov = 0,
+                        unsigned int rows = 0, unsigned int cols = 0);
+
+/**
+ * @brief TODO
+ *
+ * @param cloud_in
+ * @param lut_table
+ * @param channel
+ * @param norm_factor
+ * @return cv::Mat
+ */
+cv::Mat composeChannelImage(const PointCloudXf& cloud_in,
+                            const cv::Mat& lut_table,
+                            const std::string& channel,
+                            const float norm_factor = 0.0f);
+
+/**
+ * @brief
+ *
+ * @param cloud_in
+ * @param lut_table
+ * @param norm_factor
+ * @return cv::Mat
+ */
+// cv::Mat composeRangeImage(const PointCloudXf& cloud_in,
+//                           const cv::Mat& lut_table,
+//                           const float norm_factor = 0.0f);
+
+a
+}  // namespace ca2lib
