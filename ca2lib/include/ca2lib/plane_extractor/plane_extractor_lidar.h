@@ -63,7 +63,7 @@ class PlaneExtractorLidar : public PlaneExtractorBase {
    *
    * @param cloud_
    */
-  inline void setData(const PointCloudXf& cloud_) { _cloud = cloud_; }
+  inline void setData(const PointCloudXf* cloud_) { _cloud = cloud_; }
 
   inline std::vector<unsigned int>& mask() { return _mask; }
   inline const std::vector<unsigned int>& mask() const { return _mask; }
@@ -89,7 +89,7 @@ class PlaneExtractorLidar : public PlaneExtractorBase {
    */
   PlaneType fitPlaneSVD(const std::vector<unsigned int>& points_indices);
 
-  PointCloudXf _cloud;
+  const PointCloudXf* _cloud;
   RansacParams _ransac_params;
 
   std::vector<unsigned int> _inliers;

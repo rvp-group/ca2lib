@@ -141,7 +141,6 @@ void convertPointCloudXfToRos(const PointCloudXf& cloud_,
     uint8_t* base_ptr = msg_.data.data() + i * msg_.point_step;
     for (unsigned j = 0; j < msg_.fields.size(); ++j) {
       auto base_offset = msg_.fields[j].offset;
-      uint8_t* dest = base_ptr + offset;
       _field_float2val[msg_.fields[j].datatype](p(j), base_ptr + base_offset);
     }
   }

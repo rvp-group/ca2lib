@@ -32,6 +32,7 @@
 #include <numeric>
 #include <algorithm>
 #include <random>
+#include <iostream>
 
 namespace ca2lib {
 
@@ -42,7 +43,7 @@ PlaneType PlaneExtractorLidar::fitPlaneSVD(
 
   for (unsigned int i = 0; i < point_indices_.size(); ++i) {
     // Extract XYZ components from input cloud
-    points.row(i) = _cloud.points[point_indices_[i]].head<3>();
+    points.row(i) = _cloud->points[point_indices_[i]].head<3>();
   }
 
   const auto mean = points.colwise().mean();
@@ -69,7 +70,7 @@ bool PlaneExtractorLidar::process() {
   if (_mask.size())
     valid_points = _mask;
   else {
-    valid_points.resize(_cloud.points.size());
+    valid_points.resize(_cloud->points.size());
     std::iota(valid_points.begin(), valid_points.end(), 0);
   }
 
@@ -88,13 +89,15 @@ bool PlaneExtractorLidar::process() {
     PlaneType it_model = fitPlaneSVD(sample);
 
     // Eval solution
-    Eigen::Vector3f normal = it_model.head<3>();
+    Eigen::Vector3f normal = -it_model.head<3>();
     Eigen::Vector3f point_in_plane = normal * it_model.w();
+
     for (const auto& pidx : valid_points) {
-      const Eigen::Vector3f p = _cloud.points[pidx].head<3>();
+      const Eigen::Vector3f p = _cloud->points[pidx].head<3>();
       float error = (p - point_in_plane).dot(normal);
-      error *= error;
-      if (sqrtf(error) < _ransac_params.max_error_thresh)
+      error = error * error;
+      if (error <
+          _ransac_params.max_error_thresh * _ransac_params.max_error_thresh)
         it_inliers.push_back(pidx);
     }
 
@@ -106,10 +109,11 @@ bool PlaneExtractorLidar::process() {
 
     if (it_inliers.size() > _inliers.size()) {
       _inliers = it_inliers;
-      _plane = fitPlaneSVD(_inliers);
     }
   }
-
+  if (_inliers.size()) {
+    _plane = fitPlaneSVD(_inliers);
+  }
   return _inliers.size();
 }
 }  // namespace ca2lib

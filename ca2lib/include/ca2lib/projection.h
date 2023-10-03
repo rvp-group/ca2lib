@@ -34,6 +34,16 @@
 namespace ca2lib {
 
 /**
+ * @brief Types of image normalizations:
+ * UNCHANGED: Values are stored into the image directly without any
+ * normalization
+ * NORMALIZE: Rescale all values in range [min, max] to [0, 1]
+ * MINMAX: Rescale all values between [a, b] to [0, 1]
+ *
+ */
+enum NormalizationType : uint8_t { UNCHANGED = 0, NORMALIZE = 1, MINMAX = 2 };
+
+/**
  * @brief Computes projection indices for all the points of cloud_in and returns
  * a lookup table. The lookup table contains an index for every pixel. The index
  * may be invalid (-1) or, a positive integer that represents the index of the
@@ -42,6 +52,31 @@ namespace ca2lib {
  * The size of the lookup table is automatically infered by the ring field or by
  * the cloud width/height. If these informations are not available, input rows
  * and cols are used otherwise.
+ *
+ * @param cloud_in Input cloud
+ * @param inverse_lut Inverse lookup table: contains coordinate of projection
+ *                      for each point
+ * @param hfov [Optional] Horizontal Field of View of the LiDAR (assumed 2*pi)
+ * @param rows [Optional] Number of rows in the lut table (equal to no. rings)
+ * @param cols [Optional] Number of columns in the lut table
+ * @return cv::Mat LUT table
+ */
+cv::Mat projectLidarLUT(const PointCloudXf& cloud_in,
+                        std::vector<std::pair<bool, cv::Point2i>>& inverse_lut,
+                        const float hfov = 0, unsigned int rows = 0,
+                        unsigned int cols = 0);
+
+/**
+ * @brief Computes projection indices for all the points of cloud_in and returns
+ * a lookup table. The lookup table contains an index for every pixel. The index
+ * may be invalid (-1) or, a positive integer that represents the index of the
+ * point in cloud_in that is projected on that pixel
+ *
+ * The size of the lookup table is automatically infered by the ring field or by
+ * the cloud width/height. If these informations are not available, input rows
+ * and cols are used otherwise.
+ *
+ * This function is an overload that does not expose the inverse_lut.
  *
  * @param cloud_in Input cloud
  * @param hfov [Optional] Horizontal Field of View of the LiDAR (assumed 2*pi)
@@ -53,30 +88,19 @@ cv::Mat projectLidarLUT(const PointCloudXf& cloud_in, const float hfov = 0,
                         unsigned int rows = 0, unsigned int cols = 0);
 
 /**
- * @brief TODO
+ * @brief Composes an image using Projection by ID of a given cloud's channel.
  *
- * @param cloud_in
- * @param lut_table
- * @param channel
- * @param norm_factor
+ * @param cloud_in Input cloud
+ * @param lut_table LookUp Table computed with projectLidarLUT
+ * @param channel channel to render
+ * @param norm_type type of normalization technique
+ * @param a first normalization factor
+ * @param b second normalization factor
  * @return cv::Mat
  */
 cv::Mat composeChannelImage(const PointCloudXf& cloud_in,
                             const cv::Mat& lut_table,
                             const std::string& channel,
-                            const float norm_factor = 0.0f);
-
-/**
- * @brief
- *
- * @param cloud_in
- * @param lut_table
- * @param norm_factor
- * @return cv::Mat
- */
-// cv::Mat composeRangeImage(const PointCloudXf& cloud_in,
-//                           const cv::Mat& lut_table,
-//                           const float norm_factor = 0.0f);
-
-a
+                            const NormalizationType norm_type = MINMAX,
+                            const float a = 1.0f, const float b = 0.0f);
 }  // namespace ca2lib
