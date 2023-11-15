@@ -28,9 +28,9 @@ void cloud_cb(const sensor_msgs::PointCloud2::ConstPtr& msg_) {
   std::vector<std::pair<bool, cv::Point2i>> inverse_lut;
   const auto lut = ca2lib::projectLidarLUT(cloud, inverse_lut);
   const auto range_image = ca2lib::composeChannelImage(
-      cloud, lut, "range", ca2lib::NormalizationType::MINMAX, 0.0f, 10000.f);
+      cloud, lut, "range", ca2lib::NormalizationType::MINMAX, 0.0f, 10000.0f);
 
-  cv::Rect2i roi = cv::Rect(cv::Point2i(300, 30), cv::Point2i(600, 100));
+  cv::Rect2i roi = cv::Rect(cv::Point2i(50, 30), cv::Point2i(100, 100));
 
   cv::Mat lut_roi = lut(roi);
 

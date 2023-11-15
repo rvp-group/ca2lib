@@ -17,8 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
     srrg_cmake_modules
     srrg2_core)
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
 catkin_package(
     INCLUDE_DIRS
     "include/"
@@ -36,10 +34,6 @@ include(${srrg_cmake_modules_INCLUDE_DIRS}/CMakeCompileOptions.txt)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 message("${PROJECT_NAME}|compiling with these CXX flags: ${CMAKE_CXX_FLAGS}")
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
 add_library(ca2lib
     src/targets/target_checkerboard.cpp
     src/targets/target_charuco.cpp
@@ -47,17 +41,6 @@ add_library(ca2lib
     src/plane_extractor/plane_extractor_monocular.cpp
     src/plane_extractor/plane_extractor_lidar.cpp
     src/projection.cpp)
-
-add_library(gui
-    include/ca2lib/gui/image_frame.h
-    include/ca2lib/gui/ros_image_view.h
-    include/ca2lib/gui/ca2lib_application.h
-    src/gui/image_frame.cpp
-    src/gui/ros_image_view.cpp
-    src/gui/ca2lib_application.cpp)
-
-target_include_directories(gui PUBLIC include)
-target_link_libraries(gui PUBLIC ca2lib Qt5::Widgets)
 
 target_include_directories(ca2lib PUBLIC include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 target_link_libraries(ca2lib PUBLIC ${OpenCV_LIBRARIES} Eigen3::Eigen ${catkin_LIBRARIES})
@@ -76,5 +59,5 @@ target_link_libraries(cloud_projection_example PRIVATE ca2lib)
 add_executable(cloud_plane_estimator bin/cloud_plane_estimator.cpp)
 target_link_libraries(cloud_plane_estimator PRIVATE ca2lib)
 
-add_executable(qt_example bin/qt_example.cpp)
-target_link_libraries(qt_example PRIVATE ca2lib gui)
+add_executable(cloud_plane_estimator_interactive bin/cloud_plane_estimator_interactive.cpp)
+target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
