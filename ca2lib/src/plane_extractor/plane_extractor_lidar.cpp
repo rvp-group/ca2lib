@@ -36,7 +36,7 @@
 
 namespace ca2lib {
 
-PlaneType PlaneExtractorLidar::fitPlaneSVD(
+Plane PlaneExtractorLidar::fitPlaneSVD(
     const std::vector<unsigned int>& point_indices_) {
   Eigen::Matrix<float, -1, 3> points =
       Eigen::Matrix<float, -1, 3>(point_indices_.size(), 3);
@@ -58,8 +58,9 @@ PlaneType PlaneExtractorLidar::fitPlaneSVD(
     normal = -normal;
     c = -c;
   }
-  PlaneType plane;
-  plane << normal, c;
+  Plane plane;
+  plane.normal() = normal;
+  plane.d() = c;
   return plane;
 }
 
@@ -86,15 +87,12 @@ bool PlaneExtractorLidar::process() {
                 std::back_inserter(sample), 3,
                 std::mt19937{std::random_device{}()});
     // Compute model for current iteration
-    PlaneType it_model = fitPlaneSVD(sample);
+    Plane it_model = fitPlaneSVD(sample);
 
     // Eval solution
-    Eigen::Vector3f normal = -it_model.head<3>();
-    Eigen::Vector3f point_in_plane = normal * it_model.w();
-
     for (const auto& pidx : valid_points) {
       const Eigen::Vector3f p = _cloud->points[pidx].head<3>();
-      float error = (p - point_in_plane).dot(normal);
+      float error = it_model.distancePointToPlane(p);
       error = error * error;
       if (error <
           _ransac_params.max_error_thresh * _ransac_params.max_error_thresh)

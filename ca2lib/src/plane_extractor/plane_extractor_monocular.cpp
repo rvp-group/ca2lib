@@ -58,10 +58,8 @@ bool PlaneExtractorMonocular::process() {
 
   float d = normal_in_camera.dot(target_in_camera_translation);
 
-  _plane.x() = normal_in_camera.at<float>(0);
-  _plane.y() = normal_in_camera.at<float>(1);
-  _plane.z() = normal_in_camera.at<float>(2);
-  _plane.w() = d;
+  _plane.normal() << normal_in_camera.at<float>(0), normal_in_camera.at<float>(1), normal_in_camera.at<float>(2);
+  _plane.d() = d;
 
   return true;
 }

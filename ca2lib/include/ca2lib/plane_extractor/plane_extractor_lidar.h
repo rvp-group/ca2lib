@@ -85,9 +85,9 @@ class PlaneExtractorLidar : public PlaneExtractorBase {
    * using SVD decomposition.
    *
    * @param points_indices
-   * @return PlaneType
+   * @return Plane
    */
-  PlaneType fitPlaneSVD(const std::vector<unsigned int>& points_indices);
+  Plane fitPlaneSVD(const std::vector<unsigned int>& points_indices);
 
   const PointCloudXf* _cloud;
   RansacParams _ransac_params;
