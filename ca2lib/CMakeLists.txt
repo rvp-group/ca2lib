@@ -13,9 +13,7 @@ find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     cv_bridge
-    sensor_msgs
-    srrg_cmake_modules
-    srrg2_core)
+    sensor_msgs)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
@@ -28,11 +26,8 @@ catkin_package(
     roscpp
     cv_bridge
     sensor_msgs
-    srrg_cmake_modules
-    srrg2_core
 )
 
-include(${srrg_cmake_modules_INCLUDE_DIRS}/CMakeCompileOptions.txt)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 message("${PROJECT_NAME}|compiling with these CXX flags: ${CMAKE_CXX_FLAGS}")
 
@@ -46,7 +41,8 @@ add_library(ca2lib
     src/io/ros.cpp
     src/plane_extractor/plane_extractor_monocular.cpp
     src/plane_extractor/plane_extractor_lidar.cpp
-    src/projection.cpp)
+    src/projection.cpp
+    src/solver/solver.cpp)
 
 add_library(gui
     include/ca2lib/gui/image_frame.h
@@ -68,6 +64,9 @@ if(CATKIN_ENABLE_TESTING)
 
     catkin_add_gtest(test_extractor tests/test_extractor.cpp)
     target_link_libraries(test_extractor ca2lib ${catkin_LIBRARIES})
+
+    catkin_add_gtest(test_solver tests/test_solver.cpp)
+    target_link_libraries(test_solver ca2lib ${catkin_LIBRARIES})
 endif()
 
 add_executable(cloud_projection_example bin/cloud_projection_example.cpp)

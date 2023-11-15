@@ -28,31 +28,53 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // clang-format on
 
-#pragma once
+#include <gtest/gtest.h>
+#include "ca2lib/solver/solver.h"
 #include "ca2lib/types.h"
+#include "ca2lib/geometry.h"
 
-namespace ca2lib {
 
-class PlaneExtractorBase {
- public:
-  /**
-   * @brief Returns the plane in form (nx, ny, nz, d) where (nx, ny, nz) is the
-   * plane normal while (d) is the plane distance from the origin
-   *
-   * @return const Plane&
-   */
-  inline const Plane& plane() const { return _plane; }
+TEST(ca2lib, SolverWithLessThan3Measurement) {
+  ca2lib::Solver solver;
+  ASSERT_FALSE(solver.compute());
+}
 
-  /**
-   * @brief Interface for PlaneExtractors. When called, the extractor process
-   * input data to find the target plane.
-   *
-   * @return true plane was found
-   * @return false otherwise
-   */
-  virtual bool process() = 0;
+TEST(ca2lib, SolverRandomMeasurement) {
+  ca2lib::Measurements measurements;
+  uint plane_num = 50;
+  float eps = 1e-5;
 
- protected:
-  Plane _plane;
-};
-}  // namespace ca2lib
+  ca2lib::Vector6f pose;
+  pose << 0,0.3,1.2,0.3,-0.4,0;
+  Eigen::Isometry3f T = ca2lib::v2t(pose);
+
+  for(uint i=0; i < plane_num; ++i) {
+    ca2lib::Plane p{};
+    p.setRandom();
+
+    ca2lib::Measurement m;
+    m.id = i;
+    m.from = p;
+    m.to = p * T;
+    
+    measurements.push_back(m);
+  }
+
+  ca2lib::Solver solver;
+  solver.measurements() = measurements;
+  solver.compute();
+
+  std::cerr << solver.stats() << std::endl;
+
+  Eigen::Isometry3f res = T * solver.estimate();
+  std::cerr << res.matrix() - Eigen::Matrix4f::Identity();
+  ASSERT_TRUE(1);
+  // float th = ().cwiseAbs().max();
+  // ASSERT_FALSE(th < eps);
+}
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+

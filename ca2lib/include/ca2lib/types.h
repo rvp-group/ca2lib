@@ -35,10 +35,97 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include "geometry.h"
 
 namespace ca2lib {
 
-using PlaneType = Eigen::Vector4f;
+/**
+ * @brief Internal representation of a Plane in Hesse normal form
+ */
+struct Plane {
+ public:
+  Plane()  = default;
+  ~Plane() = default;
+
+  /**
+   * @brief Plane's accessors
+   */
+  inline const Eigen::Vector3f& normal() const {
+    return _normal;
+  }
+  inline Eigen::Vector3f& normal() {
+    return _normal;
+  }
+  inline const float& d() const {
+    return _d;
+  }
+  inline float& d() {
+    return _d;
+  }
+
+  /**
+   * @brief Set random value to plane's components 
+   */
+  inline void setRandom() {
+    Eigen::Vector4f random_vec = Eigen::Vector4f::Random();
+    random_vec.head<3>().normalize();
+    _normal = random_vec.head<3>();
+    _d = random_vec(3);
+  }
+
+  inline bool operator==(const Plane& other) const
+  { return (_normal == other.normal()
+            && _d == other.d());
+  }
+
+  /**
+   * @brief Transform a plane with an isometry T_
+   * @param T_
+   * @return return a Plane  
+   */
+  inline Plane operator* ( const Eigen::Isometry3f& T_) const {
+    Plane plane;
+    plane.normal() = T_.linear() * _normal;
+    plane.d()      = _d + plane.normal().transpose() * T_.translation();
+    return plane;
+  }
+
+  /**
+   * @brief Return the point on the plane closest to the origin 
+   * of the reference system
+   * @return return the point as Eigen::Vector3f
+   */
+  inline Eigen::Vector3f pointInPlane() const {
+    Eigen::Vector3f point = -1 * _normal * _d;
+    return point;
+  }
+
+  /**
+   * @brief Compute the error between two planes: this - plane_j
+   * @return return the error as Eigen::Vector4f 
+   */
+  inline Eigen::Vector4f operator- (const Plane& plane_j_) const {
+    Eigen::Vector4f error = Eigen::Vector4f::Zero();
+    error.head<1>() = this->normal().transpose() * (this->pointInPlane() - plane_j_.pointInPlane());
+    error.tail<3>() = plane_j_.normal() - this->normal();
+    return error;
+  }
+
+  /**
+   * @brief Compute the distance between a point and the plane
+   * @param point_
+   * @return return the distance as a float
+   */
+  inline float distancePointToPlane(const Eigen::Vector3f& point_) const {
+    return (point_ - pointInPlane()).dot(_normal);
+  }
+
+ protected:
+
+  Eigen::Vector3f _normal = Eigen::Vector3f::Ones();
+  float _d = 0;
+
+};
 
 /**
  * @brief Internal representation of a Multi channel point cloud
