@@ -148,8 +148,8 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
     return m_stat;
 
   jacobian_ = JacobianType::Zero();
-  jacobian_.block<3,3>(0,2) = - skew(_estimate.linear() * measurement_.to.normal());
-  jacobian_.block<1,3>(0,0) = measurement_.to.normal().transpose() * _estimate.linear().transpose();
+  jacobian_.block<3,3>(0,3) = - skew(_estimate.linear() * measurement_.to.normal());
+  jacobian_.block<1,3>(3,0) = measurement_.to.normal().transpose() * _estimate.linear().transpose();
   
   return m_stat;
 }
