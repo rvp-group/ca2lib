@@ -105,7 +105,7 @@ namespace ca2lib {
    */
   inline Eigen::Matrix3f angle2R(const Eigen::Vector3f& a_) {
     Eigen::Matrix3f R;
-    R = Rx(a_(1))*Ry(a_(2))*Rz(a_(3));
+    R = Rx(a_(0))*Ry(a_(1))*Rz(a_(2));
     return R;
   }
 

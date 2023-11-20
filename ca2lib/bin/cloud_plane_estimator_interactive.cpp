@@ -119,6 +119,8 @@ void updateViewport(int key_pressed) {
     for (const auto p : ransac_inliers_pixels) {
       viewport.at<cv::Vec3f>(p) = cv::Vec3f(0, 0, 1.);
     }
+    std::cerr << "Current plane: " << extractor.plane().normal().transpose()
+              << std::endl;
   }
 
   cv::circle(viewport, selection_center, selection_radius,
