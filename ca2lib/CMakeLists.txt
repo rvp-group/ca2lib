@@ -50,6 +50,9 @@ if(CATKIN_ENABLE_TESTING)
 
     catkin_add_gtest(test_solver tests/test_solver.cpp)
     target_link_libraries(test_solver ca2lib ${catkin_LIBRARIES})
+
+    catkin_add_gtest(test_geometry tests/test_geometry.cpp)
+    target_link_libraries(test_geometry ca2lib ${catkin_LIBRARIES})
 endif()
 
 add_executable(cloud_projection_example bin/cloud_projection_example.cpp)

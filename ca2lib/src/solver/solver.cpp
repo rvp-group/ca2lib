@@ -90,12 +90,13 @@ bool Solver::compute() {
 
     IterationStat stat{};
     stat.iteration_number = i+1;
-
+    std::cerr << "new iteration: " << std::endl;
     for (const auto& m: _measurements) {
       ErrorType error;
       JacobianType J;
       float weight;
       MeasurementStat m_stat = errorAndJacobian(m, error, J, weight);
+      std::cerr << error.transpose() << std::endl;
 
       if(m_stat.chi > _inlier_th) {
         m_stat.status = MeasurementStat::Status::Outlier;
@@ -121,8 +122,9 @@ bool Solver::compute() {
     if (stat.num_inliers < 3)
       return false;
 
-    Vector6f delta_X = _H.colPivHouseholderQr().solve(_b);
-    _estimate = _estimate * v2t(delta_X);
+    Vector6f delta_X = _H.colPivHouseholderQr().solve(-_b);
+    std::cerr << "update: " << delta_X << std::endl;
+    _estimate =  v2t(delta_X) * _estimate;
     _omega = updateH();
   }
 
@@ -134,7 +136,7 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
                                  JacobianType& jacobian_,
                                  float& weight_,
                                  bool error_only_) const {
-  error_ = measurement_.from - measurement_.to;
+  error_ = (_estimate * measurement_.from) - measurement_.to;
   float chi = error_.dot(error_);
   MeasurementStat::Status status = mEstimator(chi, weight_);
 

@@ -106,7 +106,7 @@ struct Plane {
    */
   inline Eigen::Vector4f operator- (const Plane& plane_j_) const {
     Eigen::Vector4f error = Eigen::Vector4f::Zero();
-    error.head<1>() = this->normal().transpose() * (this->pointInPlane() - plane_j_.pointInPlane());
+    error(0) = this->normal().transpose() * (this->pointInPlane() - plane_j_.pointInPlane());
     error.tail<3>() = plane_j_.normal() - this->normal();
     return error;
   }
@@ -120,12 +120,33 @@ struct Plane {
     return (point_ - pointInPlane()).dot(_normal);
   }
 
+  friend std::ostream& operator<<(std::ostream& out_, const Plane& p_);
+  friend inline Plane operator* ( const Eigen::Isometry3f& T_, const Plane& p_);
+
  protected:
 
   Eigen::Vector3f _normal = Eigen::Vector3f::Ones();
   float _d = 0;
 
 };
+
+inline std::ostream& operator<<(std::ostream& out_, const Plane& p_)
+{
+    out_ << "normal: " << p_.normal() << ", " << p_.d() << "\n";
+    return out_;
+}
+
+/**
+ * @brief Transform a plane p_ with an isometry T_
+ * @param T_
+ * @return return a Plane  
+ */
+inline Plane operator* ( const Eigen::Isometry3f& T_, const Plane& p_) {
+  Plane plane;
+  plane.normal() = T_.linear() * p_.normal();
+  plane.d()      = p_.d() + plane.normal().transpose() * T_.translation();
+  return plane;
+}
 
 /**
  * @brief Internal representation of a Multi channel point cloud

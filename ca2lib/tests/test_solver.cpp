@@ -41,11 +41,11 @@ TEST(ca2lib, SolverWithLessThan3Measurement) {
 
 TEST(ca2lib, SolverRandomMeasurement) {
   ca2lib::Measurements measurements;
-  uint plane_num = 50;
-  float eps = 1e-5;
+  uint plane_num = 10;
+  float eps = 1e-3;
 
   ca2lib::Vector6f pose;
-  pose << 0,0.3,1.2,0.3,-0.4,0;
+  pose << 0.1,0.2,0.3,0,0,0;
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
   for(uint i=0; i < plane_num; ++i) {
@@ -55,22 +55,27 @@ TEST(ca2lib, SolverRandomMeasurement) {
     ca2lib::Measurement m;
     m.id = i;
     m.from = p;
-    m.to = p * T;
+    m.to = T * p;
     
     measurements.push_back(m);
   }
 
   ca2lib::Solver solver;
+  solver.dumping() = 1;
+  solver.iterations() = 100;
   solver.measurements() = measurements;
   solver.compute();
 
   std::cerr << solver.stats() << std::endl;
 
-  Eigen::Isometry3f res = T * solver.estimate();
-  std::cerr << res.matrix() - Eigen::Matrix4f::Identity();
-  ASSERT_TRUE(1);
-  // float th = ().cwiseAbs().max();
-  // ASSERT_FALSE(th < eps);
+  Eigen::Isometry3f res = T.inverse() * solver.estimate();
+  std::cerr << res.matrix() - Eigen::Matrix4f::Identity() << std::endl;
+
+  std::cerr << "solver result: " << solver.estimate().matrix() << std::endl;
+  
+  Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
+
+  ASSERT_TRUE(I.isApprox(res.matrix(), eps));
 }
 
 int main(int argc, char **argv) {

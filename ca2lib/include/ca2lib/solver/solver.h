@@ -54,6 +54,13 @@ struct Measurement {
     id(id_) {};
 };
 
+inline std::ostream& operator<<(std::ostream& out_, const Measurement& m_)
+{
+    out_ << "FROM: " << m_.from << "\n";
+    out_ << "TO: " << m_.to << "\n";
+    return out_;
+}
+
 using Measurements = std::vector<Measurement>;
 
 /**
