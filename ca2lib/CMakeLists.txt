@@ -8,12 +8,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 # set(CMAKE_BUILD_TYPE Release)
+find_package(yaml-cpp REQUIRED)
+find_package(spdlog REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     cv_bridge
-    sensor_msgs)
+    sensor_msgs
+    message_filters)
 
 catkin_package(
     INCLUDE_DIRS
@@ -24,6 +27,7 @@ catkin_package(
     roscpp
     cv_bridge
     sensor_msgs
+    message_filters
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -36,7 +40,9 @@ add_library(ca2lib
     src/plane_extractor/plane_extractor_monocular.cpp
     src/plane_extractor/plane_extractor_lidar.cpp
     src/projection.cpp
-    src/solver/solver.cpp)
+    src/solver/solver.cpp
+    src/parse_command_line.cpp
+    src/env.cpp)
 
 target_include_directories(ca2lib PUBLIC include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 target_link_libraries(ca2lib PUBLIC ${OpenCV_LIBRARIES} Eigen3::Eigen ${catkin_LIBRARIES})
@@ -63,3 +69,6 @@ target_link_libraries(cloud_plane_estimator PRIVATE ca2lib)
 
 add_executable(cloud_plane_estimator_interactive bin/cloud_plane_estimator_interactive.cpp)
 target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
+
+add_executable(stereo_recorder bin/stereo_recorder.cpp)
+target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
