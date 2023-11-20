@@ -90,13 +90,12 @@ bool Solver::compute() {
 
     IterationStat stat{};
     stat.iteration_number = i+1;
-    std::cerr << "new iteration: " << std::endl;
+
     for (const auto& m: _measurements) {
       ErrorType error;
       JacobianType J;
       float weight;
       MeasurementStat m_stat = errorAndJacobian(m, error, J, weight);
-      std::cerr << error.transpose() << std::endl;
 
       if(m_stat.chi > _inlier_th) {
         m_stat.status = MeasurementStat::Status::Outlier;
@@ -123,7 +122,6 @@ bool Solver::compute() {
       return false;
 
     Vector6f delta_X = _H.colPivHouseholderQr().solve(-_b);
-    std::cerr << "update: " << delta_X << std::endl;
     _estimate =  v2t(delta_X) * _estimate;
     _omega = updateH();
   }
@@ -136,7 +134,8 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
                                  JacobianType& jacobian_,
                                  float& weight_,
                                  bool error_only_) const {
-  error_ = (_estimate * measurement_.from) - measurement_.to;
+  Plane moving = _estimate * measurement_.from;
+  error_ = moving - measurement_.to;
   float chi = error_.dot(error_);
   MeasurementStat::Status status = mEstimator(chi, weight_);
 
@@ -148,8 +147,8 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
     return m_stat;
 
   jacobian_ = JacobianType::Zero();
-  jacobian_.block<3,3>(0,3) = - skew(_estimate.linear() * measurement_.to.normal());
-  jacobian_.block<1,3>(3,0) = measurement_.to.normal().transpose() * _estimate.linear().transpose();
+  jacobian_.block<3,3>(0,3) = - skew(moving.normal());
+  jacobian_.block<1,3>(3,0) = moving.normal().transpose();
   
   return m_stat;
 }

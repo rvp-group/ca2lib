@@ -106,8 +106,9 @@ struct Plane {
    */
   inline Eigen::Vector4f operator- (const Plane& plane_j_) const {
     Eigen::Vector4f error = Eigen::Vector4f::Zero();
-    error(0) = this->normal().transpose() * (this->pointInPlane() - plane_j_.pointInPlane());
-    error.tail<3>() = plane_j_.normal() - this->normal();
+    error.head<3>() = this->normal() - plane_j_.normal();
+    error(3) = plane_j_.normal().transpose() * (plane_j_.pointInPlane() - this->pointInPlane());
+    // error(3) = this->d() - plane_j_.d();
     return error;
   }
 

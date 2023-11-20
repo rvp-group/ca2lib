@@ -41,11 +41,11 @@ TEST(ca2lib, SolverWithLessThan3Measurement) {
 
 TEST(ca2lib, SolverRandomMeasurement) {
   ca2lib::Measurements measurements;
-  uint plane_num = 10;
-  float eps = 1e-3;
+  uint plane_num = 100;
+  float eps = 1e-6;
 
   ca2lib::Vector6f pose;
-  pose << 0.1,0.2,0.3,0,0,0;
+  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
   for(uint i=0; i < plane_num; ++i) {
@@ -62,7 +62,8 @@ TEST(ca2lib, SolverRandomMeasurement) {
 
   ca2lib::Solver solver;
   solver.dumping() = 1;
-  solver.iterations() = 100;
+  // solver.estimate() = T;
+  solver.iterations() = 10;
   solver.measurements() = measurements;
   solver.compute();
 
