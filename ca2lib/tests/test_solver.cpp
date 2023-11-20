@@ -72,7 +72,9 @@ TEST(ca2lib, SolverRandomMeasurement) {
   Eigen::Isometry3f res = T.inverse() * solver.estimate();
   std::cerr << res.matrix() - Eigen::Matrix4f::Identity() << std::endl;
 
-  std::cerr << "solver result: " << solver.estimate().matrix() << std::endl;
+  std::cerr << "solver result: " << std::endl << solver.estimate().matrix() << std::endl;
+
+  std::cerr << "solution covariance: " << std::endl << solver.informationMatrix().inverse() << std::endl;
   
   Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
 
