@@ -127,7 +127,6 @@ void updateViewport(int key_pressed) {
              cv::Scalar(125, 125, 125), 1);
   cv::circle(viewport, roi_center, roi_radius, cv::Scalar(0, 255, 0), 1);
   mutex_viewport.unlock();
-
   switch (key_pressed) {
     case 0x69:  // i
       selection_radius++;
@@ -142,6 +141,17 @@ void updateViewport(int key_pressed) {
 
     case 0x2D:  // -
       rangeimage_max_range = std::max(1000., rangeimage_max_range - 1000.);
+      break;
+
+    case 0x0D:  // Enter
+      if (plane_found) {
+        ca2lib::Plane current_plane = extractor.plane();
+        std::cerr << "Plane: normal=" << current_plane.normal().transpose()
+                  << " distance=" << current_plane.d() << std::endl;
+      }
+      break;
+
+    default:
       break;
   }
 }
