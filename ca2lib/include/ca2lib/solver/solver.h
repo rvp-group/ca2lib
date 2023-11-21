@@ -85,7 +85,7 @@ struct IterationStat {
   float chi_inliers = 0.f;
   int num_outliers = 0;
   float chi_outliers = 0.f;
-  enum class SolverStatus {Success, NotEnoughMeasurements, NotWellConstrained};
+  enum class SolverStatus {Success, NotEnoughMeasurements, NotWellConstrained, UnBalance};
   SolverStatus status;
   // IterationStat() = default;
 };

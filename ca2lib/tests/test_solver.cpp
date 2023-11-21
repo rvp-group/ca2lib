@@ -34,7 +34,7 @@
 #include "ca2lib/geometry.h"
 
 
-TEST(ca2lib, SolverWithLessThan3Measurement) {
+TEST(ca2lib, SolverNotEnoughMeasurements) {
   ca2lib::Solver solver;
   ASSERT_FALSE(solver.compute());
   ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotEnoughMeasurements);
@@ -83,7 +83,7 @@ TEST(ca2lib, SolverRandomMeasurement) {
   ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::Success);
 }
 
-TEST(ca2lib, SolverRedundantMeasurement) {
+TEST(ca2lib, SolverNotWellConstrained) {
   ca2lib::Measurements measurements;
   ca2lib::Plane p;
   p.normal() << 1,0,0;
@@ -115,6 +115,58 @@ TEST(ca2lib, SolverRedundantMeasurement) {
 
   ASSERT_FALSE(solver.compute());
   ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotWellConstrained);
+}
+
+TEST(ca2lib, SolverUnBalance) {
+  ca2lib::Measurements measurements;
+  uint plane_num = 30;
+  float eps = 1e-6;
+
+  ca2lib::Vector6f pose;
+  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
+  Eigen::Isometry3f T = ca2lib::v2t(pose);
+
+  ca2lib::Plane p{};
+  for(uint i=0; i < plane_num; ++i) {
+    p.setRandom();
+
+    ca2lib::Measurement m;
+    m.id = i;
+    m.from = p;
+    m.to = T * p;
+    
+    measurements.push_back(m);
+  }
+
+  for(uint i=1; i <= plane_num; ++i) {
+    ca2lib::Measurement m;
+    m.id = i+plane_num;
+    m.from = p;
+    m.to = T * p;
+    
+    measurements.push_back(m);
+  }
+
+  ca2lib::Solver solver;
+  solver.dumping() = 1;
+  // solver.estimate() = T;
+  solver.iterations() = 10;
+  solver.measurements() = measurements;
+  solver.compute();
+
+  std::cerr << solver.stats() << std::endl;
+
+  Eigen::Isometry3f res = T.inverse() * solver.estimate();
+  std::cerr << res.matrix() - Eigen::Matrix4f::Identity() << std::endl;
+
+  std::cerr << "solver result: " << std::endl << solver.estimate().matrix() << std::endl;
+
+  std::cerr << "solution covariance: " << std::endl << solver.informationMatrix().inverse() << std::endl;
+  
+  Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
+
+  ASSERT_TRUE(I.isApprox(res.matrix(), eps));
+  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::UnBalance);
 }
 
 int main(int argc, char **argv) {

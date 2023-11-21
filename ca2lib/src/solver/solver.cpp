@@ -53,6 +53,9 @@ std::ostream& operator<<(std::ostream& os, const IterationStat& istat_) {
     case IterationStat::SolverStatus::NotWellConstrained :
       os << "NotWellConstrained";
     break;
+    case IterationStat::SolverStatus::UnBalance :
+      os << "UnBalance";
+    break;
     default:
       os << "StatusNotRecognized";
   }
@@ -138,26 +141,39 @@ bool Solver::compute() {
       _b += J.transpose() * error * weight;
     }
 
-
     if (stat.num_inliers < 3) {
       stat.status = IterationStat::SolverStatus::NotEnoughMeasurements;
       _stats.push_back(stat);
       return false;
     }
 
-    if (_H.colPivHouseholderQr().rank() != 6) {
+    auto QrDec = _H.colPivHouseholderQr();
+
+    if (QrDec.rank() != 6) {
       stat.status = IterationStat::SolverStatus::NotWellConstrained;
       _stats.push_back(stat);
       return false;
     }
-    
+
+    Eigen::EigenSolver<Matrix6f> eigensolver;
+    eigensolver.compute(_H);
+    Vector6f eigen_values = eigensolver.eigenvalues().real();
+
+    float eigen_val_min, eigen_val_max;
+    eigen_val_min = eigen_values.minCoeff();
+    eigen_val_max = eigen_values.maxCoeff();
+
     _H += Matrix6f::Identity() * _dumping;
-    Vector6f delta_X = _H.colPivHouseholderQr().solve(-_b);
+    Vector6f delta_X = QrDec.solve(-_b);
     _estimate =  v2t(delta_X) * _estimate;
 
     _omega = updateH();
 
-    stat.status = IterationStat::SolverStatus::Success;
+    if (abs(floor(log10(abs(eigen_val_min))) - floor(log10(abs(eigen_val_max)))) >= 1)
+      stat.status = IterationStat::SolverStatus::UnBalance;
+    else
+      stat.status = IterationStat::SolverStatus::Success;
+
     _stats.push_back(stat);
   }
 
