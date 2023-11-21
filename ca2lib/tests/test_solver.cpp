@@ -37,6 +37,7 @@
 TEST(ca2lib, SolverWithLessThan3Measurement) {
   ca2lib::Solver solver;
   ASSERT_FALSE(solver.compute());
+  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotEnoughMeasurements);
 }
 
 TEST(ca2lib, SolverRandomMeasurement) {
@@ -79,6 +80,41 @@ TEST(ca2lib, SolverRandomMeasurement) {
   Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
 
   ASSERT_TRUE(I.isApprox(res.matrix(), eps));
+  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::Success);
+}
+
+TEST(ca2lib, SolverRedundantMeasurement) {
+  ca2lib::Measurements measurements;
+  ca2lib::Plane p;
+  p.normal() << 1,0,0;
+  p.d() = 0;
+  int plane_num = 6;
+
+
+  ca2lib::Vector6f pose;
+  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
+  Eigen::Isometry3f T = ca2lib::v2t(pose);
+
+  for(uint i=0; i < plane_num; ++i) {
+
+    ca2lib::Measurement m;
+    m.id = i;
+    m.from = p;
+    m.to = T * p;
+    
+    measurements.push_back(m);
+  }
+
+  ca2lib::Solver solver;
+  solver.dumping() = 1;
+  solver.iterations() = 10;
+  solver.measurements() = measurements;
+  solver.compute();
+
+  std::cerr << solver.stats() << std::endl;
+
+  ASSERT_FALSE(solver.compute());
+  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotWellConstrained);
 }
 
 int main(int argc, char **argv) {

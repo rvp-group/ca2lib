@@ -42,6 +42,20 @@ std::ostream& operator<<(std::ostream& os, const IterationStat& istat_) {
      << "; chi_inliers= " << istat_.chi_inliers
      << "; num_outliers= " << istat_.num_outliers 
      << "; chi_outliers= " << istat_.chi_outliers;
+  os << "; status= ";
+  switch (istat_.status) {
+    case IterationStat::SolverStatus::Success :
+      os << "Success";
+    break;
+    case IterationStat::SolverStatus::NotEnoughMeasurements :
+      os << "NotEnoughMeasurements";
+    break;
+    case IterationStat::SolverStatus::NotWellConstrained :
+      os << "NotWellConstrained";
+    break;
+    default:
+      os << "StatusNotRecognized";
+  }
   return os;
 }
 
@@ -73,6 +87,10 @@ Matrix6f Solver::updateH() const {
     JacobianType J;
     float w;
     MeasurementStat m_stat = errorAndJacobian(m, error, J, w);
+
+    if ((error.transpose() * error) > _inlier_th)
+      continue;
+
     H += J.transpose() * J;
   }
   return H;
@@ -80,13 +98,17 @@ Matrix6f Solver::updateH() const {
 
 bool Solver::compute() {
 
-  if(_measurements.size() < 3)
+  if(_measurements.size() < 3) {
+    IterationStat stat{};
+    stat.iteration_number = 0;
+    stat.status = IterationStat::SolverStatus::NotEnoughMeasurements;
+    _stats.push_back(stat);
     return false;
+  }
 
   for (int i = 0; i < _iterations; ++i) {
-    _H = Matrix6f::Identity();
+    _H = Matrix6f::Zero();
     _b = Vector6f::Zero();  
-    _H *= _dumping;
 
     IterationStat stat{};
     stat.iteration_number = i+1;
@@ -116,14 +138,27 @@ bool Solver::compute() {
       _b += J.transpose() * error * weight;
     }
 
-    _stats.push_back(stat);
 
-    if (stat.num_inliers < 3)
+    if (stat.num_inliers < 3) {
+      stat.status = IterationStat::SolverStatus::NotEnoughMeasurements;
+      _stats.push_back(stat);
       return false;
+    }
 
+    if (_H.colPivHouseholderQr().rank() != 6) {
+      stat.status = IterationStat::SolverStatus::NotWellConstrained;
+      _stats.push_back(stat);
+      return false;
+    }
+    
+    _H += Matrix6f::Identity() * _dumping;
     Vector6f delta_X = _H.colPivHouseholderQr().solve(-_b);
     _estimate =  v2t(delta_X) * _estimate;
+
     _omega = updateH();
+
+    stat.status = IterationStat::SolverStatus::Success;
+    _stats.push_back(stat);
   }
 
   return true;

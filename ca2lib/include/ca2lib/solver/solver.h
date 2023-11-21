@@ -85,7 +85,8 @@ struct IterationStat {
   float chi_inliers = 0.f;
   int num_outliers = 0;
   float chi_outliers = 0.f;
-
+  enum class SolverStatus {Success, NotEnoughMeasurements, NotWellConstrained};
+  SolverStatus status;
   // IterationStat() = default;
 };
 
@@ -94,20 +95,44 @@ using SolverStat = std::vector<IterationStat>;
 std::ostream& operator<<(std::ostream& os, const IterationStat& istat_);
 std::ostream& operator<<(std::ostream& os, const SolverStat& stats_);
 
+
+/**
+ * @brief Solver types
+ */
 using SensorOffset = Eigen::Isometry3f;
 using InformationMatrix = Matrix6f;
 using ErrorType = Eigen::Vector4f;
 using JacobianType = Eigen::Matrix<float, 4, 6>;
 using MEstimatorType = std::function<MeasurementStat::Status(const float&, float&)>;
 
+/**
+ * @brief Default M-estimator https://en.wikipedia.org/wiki/Huber_loss
+ */
 MeasurementStat::Status huber(const float& chi_, float& weight_, float error_threshold_);
 
+/**
+ * @brief Basic solver to resolve plane fitting for two sensors offset estimation
+ * _measurements: set of measurements
+ * _estimate: estimate of the offset
+ * _omega: information matrix of the offset
+ * _H, _b: matricies for linear solving
+ * _stats: solver stats about each iteration
+ * _iteration: number of gauss-newton iterations to perform
+ * _dumping: dumping factor
+ * _inlier_th: inlier threshold
+ * mEstimator: robustifier function
+ */
 class Solver {
  public:
 
   Solver()  = default;
   ~Solver() = default;
 
+  /**
+   * @brief Once the measurements have been set (at least 3), 
+   * it computes the sensor offeset _estimate
+   * @return return true if success, false
+   */
   bool compute();
 
   /**
@@ -167,9 +192,9 @@ class Solver {
   Measurements _measurements;
 
   SensorOffset _estimate = SensorOffset::Identity();
-  InformationMatrix _omega = InformationMatrix::Identity();
+  InformationMatrix _omega = InformationMatrix::Zero();
 
-  Matrix6f _H = Matrix6f::Identity();
+  Matrix6f _H = Matrix6f::Zero();
   Vector6f _b = Vector6f::Zero();
 
   SolverStat _stats;
