@@ -75,6 +75,26 @@ struct MeasurementStat {
 
 using MeasurementStats = std::unordered_map<int, MeasurementStat>;
 
+inline std::ostream& operator<<(std::ostream& out_, const MeasurementStats& m_stats_)
+{
+    for (const auto& m: m_stats_) {
+      out_ << "id: " << m.first << ": STATUS: ";
+      switch(m.second.status) {
+        case MeasurementStat::Status::Inlier:
+          out_ << "Inlier";
+        break;
+        case MeasurementStat::Status::Outlier:
+          out_ << "Outlier";
+        break;
+        case MeasurementStat::Status::Kernelized:
+          out_ << "Kernelized";
+        break;
+      }
+      out_ << " CHI: " << m.second.chi << std::endl;
+    }
+    return out_;
+}
+
 /**
  * @brief Statistics of one solver iteration
  */

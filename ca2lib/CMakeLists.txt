@@ -72,3 +72,6 @@ target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
 
 add_executable(stereo_recorder bin/stereo_recorder.cpp)
 target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
+
+add_executable(solver_camera_lidar bin/solver_camera_lidar.cpp)
+target_link_libraries(solver_camera_lidar PRIVATE ca2lib spdlog)

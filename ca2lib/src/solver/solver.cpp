@@ -121,7 +121,6 @@ bool Solver::compute() {
       JacobianType J;
       float weight;
       MeasurementStat m_stat = errorAndJacobian(m, error, J, weight);
-
       if(m_stat.chi > _inlier_th) {
         m_stat.status = MeasurementStat::Status::Outlier;
       }
@@ -159,6 +158,7 @@ bool Solver::compute() {
     eigensolver.compute(_H);
     Vector6f eigen_values = eigensolver.eigenvalues().real();
 
+    std::cerr << "EIGENVALUES: "<< eigen_values.transpose() << std::endl;
     float eigen_val_min, eigen_val_max;
     eigen_val_min = eigen_values.minCoeff();
     eigen_val_max = eigen_values.maxCoeff();
