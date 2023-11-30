@@ -46,6 +46,16 @@ struct Plane {
  public:
   Plane()  = default;
   ~Plane() = default;
+  Plane(Eigen::Vector4f vec_) {
+    _normal << vec_(0), vec_(1), vec_(2);
+    _d = vec_(3);
+  }
+
+  inline void operator<<(Eigen::Vector4f vec_)
+  {
+    _normal << vec_(0), vec_(1), vec_(2);
+    _d = vec_(3);
+  }
 
   /**
    * @brief Plane's accessors

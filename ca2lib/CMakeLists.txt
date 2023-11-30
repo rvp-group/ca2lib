@@ -76,3 +76,5 @@ target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
 
 add_executable(compare_projections bin/compare_projections.cpp)
 target_link_libraries(compare_projections PRIVATE ca2lib spdlog)
+add_executable(solver_camera_lidar bin/solver_camera_lidar.cpp)
+target_link_libraries(solver_camera_lidar PRIVATE ca2lib spdlog)
