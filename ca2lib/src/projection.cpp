@@ -80,7 +80,7 @@ cv::Mat projectLidarLUT(const PointCloudXf& cloud_in,
     cols = cloud_in.width;
   }
 
-  const float fx = cols / hfov;
+  const float fx = -(int)cols / hfov;
 
   // Create and fill LookUpTable
   inverse_lut.clear();
@@ -197,6 +197,31 @@ cv::Mat composeChannelImage(const PointCloudXf& cloud_in,
     }
   }
   return channel_image;
+}
+
+cv::Mat projectSphericalLidarLUT(const PointCloudXf& cloud_in, const float hfov,
+                                 const float vfov, unsigned int rows,
+                                 unsigned int cols) {
+  cv::Mat lut = cv::Mat_<int32_t>(rows, cols);
+  lut = -1;
+
+  const float fx = -(int)cols / hfov;
+  const float fy = -(int)rows / vfov;
+  const float cx = cols / 2;
+  const float cy = rows / 2;
+
+  for (unsigned int i = 0; i < cloud_in.points.size(); ++i) {
+    const auto& p = cloud_in.points[i];
+    if (p.head<3>().isApprox(Eigen::Vector3f::Zero())) continue;
+    const float az = atan2f(p(1), p(0));
+    const float el = atan2(p(2), sqrtf(p(0) * p(0) + p(1) * p(1)));
+
+    const int col = cvRound(fx * az + cx);
+    const int row = cvRound(fy * el + cy);
+    if (row < 0 or row >= rows or col < 0 or col >= cols) continue;
+    lut.at<int32_t>(row, col) = i;
+  }
+  return lut;
 }
 
 }  // namespace ca2lib

@@ -103,4 +103,21 @@ cv::Mat composeChannelImage(const PointCloudXf& cloud_in,
                             const std::string& channel,
                             const NormalizationType norm_type = MINMAX,
                             const float a = 1.0f, const float b = 0.0f);
+
+/**
+ * @brief Computes the SPHERICAL projection indices for all the points of
+ * cloud_in and returns a lookup table. The lookup table contains an index for
+ * every pixel. The index may be invalid (-1) or, a positive integer that
+ * represents the index of the point in cloud_in that is projected on that pixel
+ *
+ * @param cloud_in Input cloud
+ * @param hfov Horizontal Field of View of the LiDAR
+ * @param vfov Vertical Field of View of the LiDAR
+ * @param rows Number of rows in the lut table
+ * @param cols Number of columns in the lut table
+ * @return cv::Mat LUT table
+ */
+cv::Mat projectSphericalLidarLUT(const PointCloudXf& cloud_in, const float hfov,
+                                 const float vfov, unsigned int rows,
+                                 unsigned int cols);
 }  // namespace ca2lib

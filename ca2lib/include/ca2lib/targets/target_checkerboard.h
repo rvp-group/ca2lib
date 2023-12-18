@@ -32,6 +32,18 @@
 #include "target_base.h"
 
 namespace ca2lib {
+
+class CalibrationDataCheckerboard : public CalibrationData {
+ public:
+  bool calibrateCamera(CameraModel, DistortionModel) const override;
+  void drawDetection(cv::Mat&) const override;
+  void reset() override;
+
+  cv::Size _image_size;
+  std::vector<std::vector<cv::Point2f>> _corners;
+  std::vector<std::vector<cv::Point2f>> _grid_points;
+};
+
 /**
  * @brief Checkerboard calibration target.
  *
@@ -85,7 +97,12 @@ class TargetCheckerboard : public TargetBase {
   void drawDetection(cv::Mat& frame_) const override;
 
  protected:
+  std::vector<cv::Point2f> _corners;
+  std::vector<cv::Point3f> _grid_points;
+
   unsigned int _rows, _cols;
   float _grid_size;
+
+  CalibrationDataCheckerboard _storage;
 };
 }  // namespace ca2lib

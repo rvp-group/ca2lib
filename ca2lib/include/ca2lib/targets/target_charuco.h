@@ -33,6 +33,13 @@
 #include <opencv2/aruco/charuco.hpp>
 
 namespace ca2lib {
+
+class CalibrationDataCharuco : public CalibrationData {
+ public:
+  virtual bool calibrateCamera(CameraModel, DistortionModel) const override;
+  virtual void drawDetection(cv::Mat&) const override;
+};
+
 /**
  * @brief ChArUco calibration target.
  *
@@ -95,5 +102,8 @@ class TargetCharuco : public TargetBase {
  protected:
   cv::Ptr<cv::aruco::CharucoBoard> _board;
   cv::Ptr<cv::aruco::DetectorParameters> _parameters;
+  std::vector<cv::Point2f> _corners;
+  std::vector<int> _corners_idx;
 };
+
 }  // namespace ca2lib

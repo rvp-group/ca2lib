@@ -62,19 +62,4 @@ if(CATKIN_ENABLE_TESTING)
     target_link_libraries(test_geometry ca2lib ${catkin_LIBRARIES})
 endif()
 
-add_executable(cloud_projection_example bin/cloud_projection_example.cpp)
-target_link_libraries(cloud_projection_example PRIVATE ca2lib)
-
-add_executable(cloud_plane_estimator bin/cloud_plane_estimator.cpp)
-target_link_libraries(cloud_plane_estimator PRIVATE ca2lib)
-
-add_executable(cloud_plane_estimator_interactive bin/cloud_plane_estimator_interactive.cpp)
-target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
-
-add_executable(stereo_recorder bin/stereo_recorder.cpp)
-target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
-
-add_executable(compare_projections bin/compare_projections.cpp)
-target_link_libraries(compare_projections PRIVATE ca2lib spdlog)
-add_executable(solver_camera_lidar bin/solver_camera_lidar.cpp)
-target_link_libraries(solver_camera_lidar PRIVATE ca2lib spdlog)
+add_subdirectory(bin)

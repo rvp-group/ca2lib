@@ -33,6 +33,18 @@
 #include "ca2lib/types.h"
 
 namespace ca2lib {
+
+// Interface for results
+class CalibrationData {
+ public:
+  using SharedPtr = std::shared_ptr<CalibrationData>;
+  enum CameraModel : unsigned char { Pinhole = 0, KannalaBrandth = 1 };
+  enum DistortionModel : unsigned char { None = 0, RadTan = 1 };
+  virtual bool calibrateCamera(CameraModel, DistortionModel) const = 0;
+  virtual void drawDetection(cv::Mat&) const = 0;
+  virtual void reset() = 0;
+};
+
 class TargetBase {
  public:
   using SharedPtr = std::shared_ptr<TargetBase>;
@@ -60,29 +72,6 @@ class TargetBase {
    */
   virtual bool detectAndCompute(const cv::Mat& frame_, const cv::Mat& K_,
                                 const cv::Mat& dist_coeffs_) = 0;
-
-  /**
-   * @brief Returns the detected target corners pixels
-   *
-   * @return const std::vector<cv::Point2f>& const reference to detected corners
-   */
-  const std::vector<cv::Point2f>& getCorners() const { return _corners; }
-
-  /**
-   * @brief [Available for ChArUco or similar] Returns the detected target
-   * corners indices
-   *
-   * @return const std::vector<int>&
-   */
-  const std::vector<int>& getCornersIds() const { return _corners_idx; }
-
-  /**
-   * @brief [Available for Checkerboard] Returns the associated 3D grid points
-   * in target frame
-   *
-   * @return const std::vector<cv::Point3f>&
-   */
-  const std::vector<cv::Point3f>& getGridPoints() const { return _grid_points; }
 
   /**
    * @brief Sets the resize factor
@@ -120,10 +109,12 @@ class TargetBase {
   /**
    * @brief Instantiate a Target based on the input JSON configuration file
    *
-   * @param filename_
+   * @param filename
    * @return TargetBase::SharedPtr
    */
-  static TargetBase::SharedPtr fromJson(const std::string&& filename_);
+  static TargetBase::SharedPtr fromFile(const std::string& filename);
+
+  virtual const CalibrationData& getData() const = 0;
 
  protected:
   // Frame resize factor. Image can be resized before the detection phase if
@@ -132,10 +123,6 @@ class TargetBase {
 
   // Transform camera_opt_T_target in Rodrigues (CV) format
   cv::Mat _rvec, _tvec;
-
-  // Detection results
-  std::vector<cv::Point2f> _corners;
-  std::vector<int> _corners_idx;
-  std::vector<cv::Point3f> _grid_points;
 };
+
 }  // namespace ca2lib

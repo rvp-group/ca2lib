@@ -32,8 +32,48 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include <iostream>
+#include <thread>
 
 namespace ca2lib {
+
+bool CalibrationDataCheckerboard::calibrateCamera(
+    CameraModel model_type, DistortionModel dist_type) const {
+  cv::Mat K, dist_coeffs;
+  cv::Mat rvecs, tvecs;
+  double reprojection_error = 0;
+  switch (model_type) {
+    case Pinhole: {
+      switch (dist_type) {
+        case None: {
+          // Suppress Rad-Tan parameters
+          reprojection_error = cv::calibrateCamera(
+              _grid_points, _corners, _image_size, K, dist_coeffs, rvecs, tvecs,
+              cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K1 |
+                  cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3);
+          break;
+        }
+        case RadTan: {
+          reprojection_error =
+              cv::calibrateCamera(_grid_points, _corners, _image_size, K,
+                                  dist_coeffs, rvecs, tvecs);
+          break;
+        }
+        default:
+          throw std::runtime_error(
+              "Distortion model is not supported by selected CameraModel");
+      }
+      break;
+    }
+    case KannalaBrandth: {
+      break;
+    }
+    default:
+      throw std::runtime_error("Unsupported CameraModel.");
+  }
+}
+void CalibrationDataCheckerboard::drawDetection(cv::Mat&) const {}
+void CalibrationDataCheckerboard::reset() {}
+
 /**
  * @brief Attempts target detection on the input image. In case target is
  * detected, stores detection parameters internally.
@@ -51,12 +91,14 @@ bool TargetCheckerboard::detect(const cv::Mat& frame_) {
     cv::cvtColor(frame_, frame_gray, cv::COLOR_BGR2GRAY);
 
   _corners.clear();
-  _corners_idx.clear();
 
   bool target_found = cv::findChessboardCornersSB(
       frame_gray, cv::Size(_cols, _rows), _corners,
       cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_EXHAUSTIVE +
           cv::CALIB_CB_ACCURACY);
+  // bool target_found = cv::findChessboardCornersSB(
+  //     frame_gray, cv::Size(_cols, _rows), _corners,
+  //     cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_ACCURACY);
   return target_found;
 }
 
@@ -101,4 +143,5 @@ void TargetCheckerboard::drawDetection(cv::Mat& frame_) const {
   CV_Assert(frame_.type() == CV_8UC1 or frame_.type() == CV_8UC3);
   cv::drawChessboardCorners(frame_, cv::Size(_cols, _rows), _corners, true);
 }
+
 }  // namespace ca2lib
