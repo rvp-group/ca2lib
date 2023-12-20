@@ -102,33 +102,29 @@ void sync_callback(const sensor_msgs::ImageConstPtr& left_msg,
   const cv::Mat left_frame = cv_bridge::toCvShare(left_msg, "bgr8")->image;
   const cv::Mat right_frame = cv_bridge::toCvShare(right_msg, "bgr8")->image;
 
-  if (left_detection_mask.empty() or right_detection_mask.empty()) {
-    left_detection_mask = cv::Mat(left_frame.size(), CV_8UC3);
-    right_detection_mask = cv::Mat(right_frame.size(), CV_8UC3);
-    left_detection_mask = cv::Vec3b(255, 255, 255);
-    right_detection_mask = cv::Vec3b(255, 255, 255);
-  }
-
   cv::Mat viz_left_frame = left_frame.clone();
   cv::Mat viz_right_frame = right_frame.clone();
 
-  cv::Mat frame_viz, frame_viz_masks;
+  const auto& detections_left = left_target_ptr->getData();
+  const auto& detections_right = right_target_ptr->getData();
+
+  detections_left.drawDetection(viz_left_frame);
+  detections_right.drawDetection(viz_right_frame);
+
+  cv::Mat frame_viz;
   cv::hconcat(viz_left_frame, viz_right_frame, frame_viz);
-  cv::hconcat(left_detection_mask, right_detection_mask, frame_viz_masks);
   cv::resize(frame_viz, frame_viz,
              cv::Size(frame_viz.cols / 2, frame_viz.rows / 2));
-  cv::resize(frame_viz_masks, frame_viz_masks,
-             cv::Size(frame_viz_masks.cols / 2, frame_viz_masks.rows / 2));
 
   cv::imshow("Stereo", frame_viz);
-  cv::imshow("Detections", frame_viz_masks);
   char key = cv::waitKey(10);
 
   const auto ts = left_msg->header.stamp.toSec();
+
   switch (key) {
     case 'r':
       if (right_target_ptr->detect(right_frame)) {
-        right_target_ptr->drawDetection(right_detection_mask);
+        right_target_ptr->saveDetection();
         std::filesystem::path dest =
             right_output_dir / (std::to_string(ts) + ".png");
         spdlog::info("Saving " + dest.string());
@@ -139,7 +135,7 @@ void sync_callback(const sensor_msgs::ImageConstPtr& left_msg,
       break;
     case 'l':
       if (left_target_ptr->detect(left_frame)) {
-        left_target_ptr->drawDetection(left_detection_mask);
+        left_target_ptr->saveDetection();
         std::filesystem::path dest =
             left_output_dir / (std::to_string(ts) + ".png");
         spdlog::info("Saving " + dest.string());
@@ -151,8 +147,8 @@ void sync_callback(const sensor_msgs::ImageConstPtr& left_msg,
     case 0x20:  // Space
       if (right_target_ptr->detect(right_frame) &&
           left_target_ptr->detect(left_frame)) {
-        right_target_ptr->drawDetection(right_detection_mask);
-        left_target_ptr->drawDetection(left_detection_mask);
+        right_target_ptr->saveDetection();
+        left_target_ptr->saveDetection();
         std::filesystem::path dest_r =
             right_output_dir / (std::to_string(ts) + ".png");
         std::filesystem::path dest_l =

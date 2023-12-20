@@ -43,7 +43,8 @@ add_library(ca2lib
     src/projection.cpp
     src/solver/solver.cpp
     src/parse_command_line.cpp
-    src/env.cpp)
+    src/env.cpp
+    src/types.cpp)
 
 target_include_directories(ca2lib PUBLIC include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 target_link_libraries(ca2lib PUBLIC ${OpenCV_LIBRARIES} Eigen3::Eigen ${catkin_LIBRARIES} yaml-cpp)

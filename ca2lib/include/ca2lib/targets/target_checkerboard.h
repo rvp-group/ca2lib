@@ -35,13 +35,14 @@ namespace ca2lib {
 
 class CalibrationDataCheckerboard : public CalibrationData {
  public:
-  bool calibrateCamera(CameraModel, DistortionModel) const override;
+  CameraIntrinsics calibrateCamera(CameraModel, DistortionModel) const override;
   void drawDetection(cv::Mat&) const override;
   void reset() override;
 
   cv::Size _image_size;
+  cv::Size _pattern_size;
   std::vector<std::vector<cv::Point2f>> _corners;
-  std::vector<std::vector<cv::Point2f>> _grid_points;
+  std::vector<std::vector<cv::Point3f>> _grid_points;
 };
 
 /**
@@ -96,12 +97,26 @@ class TargetCheckerboard : public TargetBase {
    */
   void drawDetection(cv::Mat& frame_) const override;
 
- protected:
-  std::vector<cv::Point2f> _corners;
-  std::vector<cv::Point3f> _grid_points;
+  /**
+   * @brief Save the current detection inside the internal result representation
+   *
+   */
+  void saveDetection() override;
 
+  /**
+   * @brief Returns a constant reference to the internal result storage
+   *
+   * @return const CalibrationData&
+   */
+  inline const CalibrationData& getData() const { return _storage; };
+
+ protected:
   unsigned int _rows, _cols;
   float _grid_size;
+
+  std::vector<cv::Point2f> _corners;
+  std::vector<cv::Point3f> _grid_points;
+  cv::Size _image_size;
 
   CalibrationDataCheckerboard _storage;
 };

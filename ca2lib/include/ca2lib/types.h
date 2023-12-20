@@ -44,15 +44,14 @@ namespace ca2lib {
  */
 struct Plane {
  public:
-  Plane()  = default;
+  Plane() = default;
   ~Plane() = default;
   Plane(Eigen::Vector4f vec_) {
     _normal << vec_(0), vec_(1), vec_(2);
     _d = vec_(3);
   }
 
-  inline void operator<<(Eigen::Vector4f vec_)
-  {
+  inline void operator<<(Eigen::Vector4f vec_) {
     _normal << vec_(0), vec_(1), vec_(2);
     _d = vec_(3);
   }
@@ -60,21 +59,13 @@ struct Plane {
   /**
    * @brief Plane's accessors
    */
-  inline const Eigen::Vector3f& normal() const {
-    return _normal;
-  }
-  inline Eigen::Vector3f& normal() {
-    return _normal;
-  }
-  inline const float& d() const {
-    return _d;
-  }
-  inline float& d() {
-    return _d;
-  }
+  inline const Eigen::Vector3f& normal() const { return _normal; }
+  inline Eigen::Vector3f& normal() { return _normal; }
+  inline const float& d() const { return _d; }
+  inline float& d() { return _d; }
 
   /**
-   * @brief Set random value to plane's components 
+   * @brief Set random value to plane's components
    */
   inline void setRandom() {
     Eigen::Vector4f random_vec = Eigen::Vector4f::Random();
@@ -83,25 +74,24 @@ struct Plane {
     _d = random_vec(3);
   }
 
-  inline bool operator==(const Plane& other) const
-  { return (_normal == other.normal()
-            && _d == other.d());
+  inline bool operator==(const Plane& other) const {
+    return (_normal == other.normal() && _d == other.d());
   }
 
   /**
    * @brief Transform a plane with an isometry T_
    * @param T_
-   * @return return a Plane  
+   * @return return a Plane
    */
-  inline Plane operator* ( const Eigen::Isometry3f& T_) const {
+  inline Plane operator*(const Eigen::Isometry3f& T_) const {
     Plane plane;
     plane.normal() = T_.linear() * _normal;
-    plane.d()      = _d + plane.normal().transpose() * T_.translation();
+    plane.d() = _d + plane.normal().transpose() * T_.translation();
     return plane;
   }
 
   /**
-   * @brief Return the point on the plane closest to the origin 
+   * @brief Return the point on the plane closest to the origin
    * of the reference system
    * @return return the point as Eigen::Vector3f
    */
@@ -112,12 +102,13 @@ struct Plane {
 
   /**
    * @brief Compute the error between two planes: this - plane_j
-   * @return return the error as Eigen::Vector4f 
+   * @return return the error as Eigen::Vector4f
    */
-  inline Eigen::Vector4f operator- (const Plane& plane_j_) const {
+  inline Eigen::Vector4f operator-(const Plane& plane_j_) const {
     Eigen::Vector4f error = Eigen::Vector4f::Zero();
     error.head<3>() = this->normal() - plane_j_.normal();
-    error(3) = plane_j_.normal().transpose() * (plane_j_.pointInPlane() - this->pointInPlane());
+    error(3) = plane_j_.normal().transpose() *
+               (plane_j_.pointInPlane() - this->pointInPlane());
     // error(3) = this->d() - plane_j_.d();
     return error;
   }
@@ -132,30 +123,27 @@ struct Plane {
   }
 
   friend std::ostream& operator<<(std::ostream& out_, const Plane& p_);
-  friend inline Plane operator* ( const Eigen::Isometry3f& T_, const Plane& p_);
+  friend inline Plane operator*(const Eigen::Isometry3f& T_, const Plane& p_);
 
  protected:
-
   Eigen::Vector3f _normal = Eigen::Vector3f::Ones();
   float _d = 0;
-
 };
 
-inline std::ostream& operator<<(std::ostream& out_, const Plane& p_)
-{
-    out_ << "normal: " << p_.normal() << ", " << p_.d() << "\n";
-    return out_;
+inline std::ostream& operator<<(std::ostream& out_, const Plane& p_) {
+  out_ << "normal: " << p_.normal() << ", " << p_.d() << "\n";
+  return out_;
 }
 
 /**
  * @brief Transform a plane p_ with an isometry T_
  * @param T_
- * @return return a Plane  
+ * @return return a Plane
  */
-inline Plane operator* ( const Eigen::Isometry3f& T_, const Plane& p_) {
+inline Plane operator*(const Eigen::Isometry3f& T_, const Plane& p_) {
   Plane plane;
   plane.normal() = T_.linear() * p_.normal();
-  plane.d()      = p_.d() + plane.normal().transpose() * T_.translation();
+  plane.d() = p_.d() + plane.normal().transpose() * T_.translation();
   return plane;
 }
 
@@ -201,5 +189,27 @@ struct PointCloudXf {
    * sensor_msgs::PointCloud2::PointField).
    */
   std::map<std::string, std::pair<unsigned int, uint8_t>> fields;
+};
+
+struct CameraIntrinsics {
+  cv::Mat K;
+  cv::Mat dist_coeffs;
+  cv::Mat rvecs, tvecs;
+  float reprojection_error;
+
+  /**
+   * @brief Save parameters in a [JSON|YAML] file
+   *
+   * @param f destination path
+   *
+   */
+  void save(const std::string& f);
+  /**
+   * @brief Load parameters from a previously [JSON|YAML] file
+   *
+   * @param f source path
+   * @return CameraIntrinsics
+   */
+  static CameraIntrinsics load(const std::string& f);
 };
 }  // namespace ca2lib

@@ -40,7 +40,8 @@ class CalibrationData {
   using SharedPtr = std::shared_ptr<CalibrationData>;
   enum CameraModel : unsigned char { Pinhole = 0, KannalaBrandth = 1 };
   enum DistortionModel : unsigned char { None = 0, RadTan = 1 };
-  virtual bool calibrateCamera(CameraModel, DistortionModel) const = 0;
+  virtual CameraIntrinsics calibrateCamera(CameraModel,
+                                           DistortionModel) const = 0;
   virtual void drawDetection(cv::Mat&) const = 0;
   virtual void reset() = 0;
 };
@@ -114,6 +115,16 @@ class TargetBase {
    */
   static TargetBase::SharedPtr fromFile(const std::string& filename);
 
+  /**
+   * @brief Save the current detection inside the internal result representation
+   *
+   */
+  virtual void saveDetection() = 0;
+  /**
+   * @brief Returns a constant reference to the internal result storage
+   *
+   * @return const CalibrationData&
+   */
   virtual const CalibrationData& getData() const = 0;
 
  protected:

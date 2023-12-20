@@ -33,6 +33,51 @@
 #include <opencv2/calib3d.hpp>
 
 namespace ca2lib {
+
+CameraIntrinsics CalibrationDataCharuco::calibrateCamera(
+    CameraModel model_type, DistortionModel dist_type) const {
+  CameraIntrinsics res;
+  switch (model_type) {
+    case Pinhole: {
+      switch (dist_type) {
+        case None: {
+          res.reprojection_error = cv::aruco::calibrateCameraCharuco(
+              _corners, _corners_idx, _board, _image_size, res.K,
+              res.dist_coeffs, res.rvecs, res.tvecs,
+              cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K1 |
+                  cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3);
+          break;
+        }
+        case RadTan: {
+          res.reprojection_error = cv::aruco::calibrateCameraCharuco(
+              _corners, _corners_idx, _board, _image_size, res.K,
+              res.dist_coeffs, res.rvecs, res.tvecs);
+          break;
+        }
+        default:
+          throw std::runtime_error(
+              "Distortion model is not supported by selected CameraModel");
+      }
+      break;
+    }
+    default:
+      throw std::runtime_error("Unsupported CameraModel.");
+  }
+  return res;
+}
+
+void CalibrationDataCharuco::drawDetection(cv::Mat& frame) const {
+  for (int i = 0; i < _corners.size(); ++i) {
+    cv::aruco::drawDetectedCornersCharuco(frame, _corners[i], _corners_idx[i]);
+  }
+};
+
+void CalibrationDataCharuco::reset() {
+  _image_size = cv::Size(0, 0);
+  _corners.clear();
+  _corners_idx.clear();
+};
+
 TargetCharuco::TargetCharuco(unsigned int rows_, unsigned int cols_,
                              float len_square_, float len_marker_,
                              const Family_t family_) {
@@ -114,5 +159,16 @@ bool TargetCharuco::detectAndCompute(const cv::Mat& frame_, const cv::Mat& K_,
 void TargetCharuco::drawDetection(cv::Mat& frame_) const {
   CV_Assert(frame_.type() == CV_8UC1 or frame_.type() == CV_8UC3);
   cv::aruco::drawDetectedCornersCharuco(frame_, _corners, _corners_idx);
+}
+
+/**
+ * @brief Save the current detection inside the internal result representation
+ *
+ */
+void TargetCharuco::saveDetection() {
+  _storage._board = _board;
+  _storage._image_size = _image_size;
+  _storage._corners.push_back(_corners);
+  _storage._corners_idx.push_back(_corners_idx);
 }
 }  // namespace ca2lib

@@ -36,8 +36,15 @@ namespace ca2lib {
 
 class CalibrationDataCharuco : public CalibrationData {
  public:
-  virtual bool calibrateCamera(CameraModel, DistortionModel) const override;
+  virtual CameraIntrinsics calibrateCamera(CameraModel,
+                                           DistortionModel) const override;
   virtual void drawDetection(cv::Mat&) const override;
+  void reset() override;
+
+  cv::Ptr<cv::aruco::CharucoBoard> _board;
+  cv::Size _image_size;
+  std::vector<std::vector<cv::Point2f>> _corners;
+  std::vector<std::vector<int>> _corners_idx;
 };
 
 /**
@@ -99,11 +106,26 @@ class TargetCharuco : public TargetBase {
     return _parameters;
   }
 
+  /**
+   * @brief Save the current detection inside the internal result representation
+   *
+   */
+  void saveDetection() override;
+
+  /**
+   * @brief Returns a constant reference to the internal result storage
+   *
+   * @return const CalibrationData&
+   */
+  inline const CalibrationData& getData() const { return _storage; };
+
  protected:
   cv::Ptr<cv::aruco::CharucoBoard> _board;
   cv::Ptr<cv::aruco::DetectorParameters> _parameters;
   std::vector<cv::Point2f> _corners;
   std::vector<int> _corners_idx;
+  cv::Size _image_size;
+  CalibrationDataCharuco _storage;
 };
 
 }  // namespace ca2lib
