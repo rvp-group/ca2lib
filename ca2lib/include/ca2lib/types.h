@@ -203,7 +203,7 @@ struct CameraIntrinsics {
    * @param f destination path
    *
    */
-  void save(const std::string& f);
+  void save(const std::string& f) const;
   /**
    * @brief Load parameters from a previously [JSON|YAML] file
    *
@@ -212,4 +212,7 @@ struct CameraIntrinsics {
    */
   static CameraIntrinsics load(const std::string& f);
 };
+
+// Inverse LookUp Table
+using InverseLut_t = std::vector<std::pair<bool, cv::Point2i>>;
 }  // namespace ca2lib

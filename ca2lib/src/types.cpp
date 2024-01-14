@@ -31,10 +31,10 @@
 #include "ca2lib/types.h"
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
-
+#include <fstream>
 namespace ca2lib {
 
-void CameraIntrinsics::save(const std::string& f) {
+void CameraIntrinsics::save(const std::string& f) const {
   namespace fs = std::filesystem;
   fs::path filename = f;
   if (filename.extension() == ".yaml") {
@@ -50,12 +50,15 @@ void CameraIntrinsics::save(const std::string& f) {
     }
     conf["K"] = storage_K;
     conf["dist_coeffs"] = storage_D;
+    YAML::Emitter emitter;
+    emitter << conf;
+    std::ofstream fout(f);
+    fout << emitter.c_str();
+    return;
   } else if (filename.extension() == ".json") {
-    throw std::runtime_error(
-        "Only YAML configurations are currently supported");
+    throw std::runtime_error("JSON configurations are currently not supported");
   } else {
-    throw std::runtime_error(
-        "Only YAML configurations are currently supported");
+    throw std::runtime_error("Format configuration is currently not supported");
   }
 }
 
@@ -65,21 +68,19 @@ CameraIntrinsics CameraIntrinsics::load(const std::string& f) {
   CameraIntrinsics res;
   if (filename.extension() == ".yaml") {
     const auto config = YAML::LoadFile(f);
-    res.K = cv::Mat::eye(3, 3, CV_32F);
+    res.K = cv::Mat::eye(3, 3, CV_64F);
     res.K.at<double>(0, 0) = config["K"][0].as<double>();
     res.K.at<double>(1, 1) = config["K"][1].as<double>();
     res.K.at<double>(0, 2) = config["K"][2].as<double>();
     res.K.at<double>(1, 2) = config["K"][3].as<double>();
-    res.dist_coeffs = cv::Mat(1, config["dist_coeffs"].size(), CV_32F);
+    res.dist_coeffs = cv::Mat(1, config["dist_coeffs"].size(), CV_64F);
     for (int i = 0; i < res.dist_coeffs.cols; ++i) {
       res.dist_coeffs.at<double>(0, i) = config["dist_coeffs"][i].as<double>();
     }
   } else if (filename.extension() == ".json") {
-    throw std::runtime_error(
-        "Only YAML configurations are currently supported");
+    throw std::runtime_error("JSON configurations are currently not supported");
   } else {
-    throw std::runtime_error(
-        "Only YAML configurations are currently supported");
+    throw std::runtime_error("Format configuration is currently not supported");
   }
   return res;
 }

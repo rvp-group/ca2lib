@@ -71,6 +71,7 @@ int main(int argc, char** argv) {
 
   std::cerr << "distortion coefficients = " << calibration_results.dist_coeffs
             << std::endl;
-
+  spdlog::info("Saving results to " + output_f.value());
+  calibration_results.save(output_f.value());
   return 0;
 }
