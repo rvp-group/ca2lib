@@ -14,6 +14,7 @@
 #include "ca2lib/parse_command_line.h"
 #include "ca2lib/plane_extractor.h"
 #include "ca2lib/projection.h"
+#include "ca2lib/solver/solver.h"
 #include "ca2lib/targets.h"
 #include "ca2lib/types.h"
 
@@ -24,6 +25,7 @@ const char* whatdoes = "Calibrate LiDAR-RGB Camera pair.";
 cv::Mat viewport;
 ca2lib::CameraIntrinsics camera_info;
 ca2lib::TargetBase::SharedPtr target_ptr = nullptr;
+ca2lib::PointCloudXf cloud;
 // Range Image max range
 float ri_max_range = 10000;
 bool roi_set = false;
@@ -32,14 +34,22 @@ bool plane_found = false;
 cv::Point2i roi_center;
 cv::Point2i selection_center;
 int selection_radius = 10;
-ca2lib::PlaneExtractorLidar plane_extractor;
+ca2lib::PlaneExtractorLidar extractor_cloud;
+ca2lib::PlaneExtractorMonocular extractor_camera;
 std::vector<cv::Point> ransac_inlier_pixels;
 cv::Mat range_image, camera_image;
+ca2lib::Measurements measurement_vect;
+ca2lib::Solver solver;
+Eigen::Isometry3f camera_T_lidar;
+bool solution_found = false;
 
 void data_callback(const sensor_msgs::PointCloud2::ConstPtr&,
                    const sensor_msgs::Image::ConstPtr&);
 void updateViewport(int);
 void mouseCallback(int, int, int, int, void*);
+cv::Mat projectLidar(const cv::Mat& image_rgb,
+                     const ca2lib::PointCloudXf& cloud,
+                     const Eigen::Isometry3f& camera_T_lidar);
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "calibrate_lidar_camera");
@@ -78,14 +88,18 @@ int main(int argc, char** argv) {
 
   spdlog::info("Reading target config " + target_f.value());
   target_ptr = ca2lib::TargetBase::fromFile(target_f.value());
+  extractor_camera.setTarget(target_ptr);
 
   spdlog::info("Reading camera intrinsics " + camera_intrinsics_f.value());
   camera_info = ca2lib::CameraIntrinsics::load(camera_intrinsics_f.value());
+  extractor_camera.setCameraParams(camera_info.K, camera_info.dist_coeffs);
 
   cv::namedWindow("Viewport");
+  cv::namedWindow("Camera Image");
+  cv::namedWindow("Reprojection");
   cv::setMouseCallback("Viewport", mouseCallback);
 
-  plane_extractor.setRansacParams({300, 0.02, 0.1});
+  extractor_cloud.setRansacParams({300, 0.02, 0.1});
 
   ros::NodeHandle nh;
 
@@ -104,7 +118,10 @@ int main(int argc, char** argv) {
                                     std::placeholders::_2));
     while (ros::ok()) {
       ros::spinOnce();
-      if (!viewport.empty()) cv::imshow("Viewport", viewport);
+      if (!viewport.empty()) {
+        cv::imshow("Camera Image", camera_image);
+        cv::imshow("Viewport", viewport);
+      }
       updateViewport(cv::waitKey(10));
     }
   } else {
@@ -132,7 +149,7 @@ int main(int argc, char** argv) {
 void data_callback(const sensor_msgs::PointCloud2::ConstPtr& cloud_msg_,
                    const sensor_msgs::Image::ConstPtr& image_msg_) {
   // Process Cloud
-  auto cloud = ca2lib::convertRosToPointCloud(cloud_msg_);
+  cloud = ca2lib::convertRosToPointCloud(cloud_msg_);
   ca2lib::InverseLut_t inverse_lut;
   const auto lut = ca2lib::projectLidarLUT(cloud, inverse_lut);
 
@@ -166,17 +183,17 @@ void data_callback(const sensor_msgs::PointCloud2::ConstPtr& cloud_msg_,
     }
     // Run plane extractor
     if (train_points.size() > 3) {
-      plane_extractor.mask() = train_points;
-      plane_extractor.setData(&cloud);
-      plane_found = plane_extractor.process();
+      extractor_cloud.mask() = train_points;
+      extractor_cloud.setData(&cloud);
+      plane_found = extractor_cloud.process();
     } else
       plane_found = false;
   }
 
   if (plane_found) {
     ransac_inlier_pixels.clear();
-    ransac_inlier_pixels.reserve(plane_extractor.inliers().size());
-    for (const auto idx : plane_extractor.inliers()) {
+    ransac_inlier_pixels.reserve(extractor_cloud.inliers().size());
+    for (const auto idx : extractor_cloud.inliers()) {
       const auto& [valid, p] = inverse_lut[idx];
       if (valid) {
         ransac_inlier_pixels.push_back(p);
@@ -215,14 +232,50 @@ void updateViewport(int key_pressed) {
       break;
 
     case 0x0D:  // Enter
-      if (target_ptr->detectAndCompute(camera_image, camera_info.K,
-                                       camera_info.dist_coeffs)) {
+      extractor_camera.setData(camera_image);
+      if (extractor_camera.process()) {
         spdlog::info("Target detected on camera image");
+        std::cerr << "plane_camera="
+                  << extractor_camera.plane().normal().transpose() << std::endl;
+        std::cerr << "plane_lidar ="
+                  << extractor_cloud.plane().normal().transpose() << std::endl;
+
+        cv::Mat frame_detection = camera_image.clone();
+        extractor_camera.drawPlane(frame_detection);
+        cv::imshow("Plane Detection", frame_detection);
+
+        ca2lib::Measurement meas;
+        meas.from = extractor_cloud.plane();
+        meas.to = extractor_camera.plane();
+        meas.id = measurement_vect.size();
+        measurement_vect.push_back(meas);
+
+        if (measurement_vect.size() > 3) {
+          spdlog::info("Solving extrinsics camera_T_lidar");
+          solver.measurements() = measurement_vect;
+          solver.dumping() = 1;
+          solver.iterations() = 10;
+          solver.inlierTh() = 10.f;
+          solver.compute();
+
+          std::cerr << solver.stats() << std::endl;
+
+          camera_T_lidar = solver.estimate();
+          std::cerr << "camera_T_lidar:\n"
+                    << camera_T_lidar.matrix() << std::endl;
+          solution_found = true;
+        }
       }
       break;
 
     default:
       break;
+  }
+  // Display reprojection
+  if (solution_found) {
+    cv::Mat cloud_reprojected =
+        projectLidar(camera_image, cloud, camera_T_lidar);
+    cv::imshow("Reprojection", cloud_reprojected);
   }
 }
 
@@ -233,4 +286,21 @@ void mouseCallback(int event, int x, int y, int flags, void*) {
     roi_center = selection_center;
     roi_radius = selection_radius;
   }
+}
+
+cv::Mat projectLidar(const cv::Mat& image_rgb,
+                     const ca2lib::PointCloudXf& cloud,
+                     const Eigen::Isometry3f& camera_T_lidar) {
+  cv::Mat ret = image_rgb.clone();
+  ca2lib::InverseLut_t inv_lut;
+  std::cerr << "cloud size| " << cloud.points.size() << " | camera_T_lidar : \n"
+            << camera_T_lidar.matrix() << std::endl;
+  cv::Mat lut = ca2lib::projectPinholeLUT(cloud, inv_lut, ret.size(),
+                                          camera_info, camera_T_lidar);
+
+  for (unsigned int i = 0; i < cloud.points.size(); ++i) {
+    if (inv_lut[i].first)
+      cv::circle(ret, inv_lut[i].second, 3, {0, 0, 255}, -1);
+  }
+  return ret;
 }

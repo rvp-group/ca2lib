@@ -120,4 +120,25 @@ cv::Mat composeChannelImage(const PointCloudXf& cloud_in,
 cv::Mat projectSphericalLidarLUT(const PointCloudXf& cloud_in, const float hfov,
                                  const float vfov, unsigned int rows,
                                  unsigned int cols);
+
+/**
+ * @brief Computes the PINHOLE projection indices for all the points of cloud_in
+ * and returns a lookup table. The Lookup table contains an index for
+ * every pixel. THe index may be invalid (-1) or, a positive integer that
+ * represents the index of the point in cloud_in that is projected on that pixel
+ *
+ * @param cloud_in Input cloud
+ * @param inverse_lut Inverse lookup table: contains coordinate of projection
+ *                      for each point
+ * @param image_size Size of the lookup table
+ * @param camera_intrinsics camera intrinsics (K, dist_coeffs)
+ * @param camera_T_cloud Isometry that maps points in cloud frame to camera
+ * frame (i.e. p_cam = camera_T_cloud * p_cloud)
+ * @return cv::Mat
+ */
+cv::Mat projectPinholeLUT(
+    const PointCloudXf& cloud_in,
+    std::vector<std::pair<bool, cv::Point2i>>& inverse_lut,
+    const cv::Size image_size, const CameraIntrinsics camera_intrinsics,
+    const Eigen::Isometry3f& camera_T_cloud);
 }  // namespace ca2lib

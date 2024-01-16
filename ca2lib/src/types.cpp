@@ -32,6 +32,7 @@
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 namespace ca2lib {
 
 void CameraIntrinsics::save(const std::string& f) const {
@@ -46,7 +47,7 @@ void CameraIntrinsics::save(const std::string& f) const {
     storage_K.push_back(K.at<double>(1, 2));
     YAML::Node storage_D;
     for (int i = 0; i < dist_coeffs.cols; ++i) {
-      storage_D.push_back(dist_coeffs.at<double>(i, 0));
+      storage_D.push_back(dist_coeffs.at<double>(0, i));
     }
     conf["K"] = storage_K;
     conf["dist_coeffs"] = storage_D;

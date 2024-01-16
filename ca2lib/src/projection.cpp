@@ -31,6 +31,8 @@
 #include "ca2lib/projection.h"
 #include <numeric>
 #include <iostream>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/calib3d.hpp>
 
 namespace ca2lib {
 
@@ -224,4 +226,75 @@ cv::Mat projectSphericalLidarLUT(const PointCloudXf& cloud_in, const float hfov,
   return lut;
 }
 
+/**
+ * @brief Computes the PINHOLE projection indices for all the points of cloud_in
+ * and returns a lookup table. The Lookup table contains an index for
+ * every pixel. THe index may be invalid (-1) or, a positive integer that
+ * represents the index of the point in cloud_in that is projected on that pixel
+ *
+ * @param cloud_in Input cloud
+ * @param inverse_lut Inverse lookup table: contains coordinate of projection
+ *                      for each point
+ * @param image_size Size of the lookup table
+ * @param camera_intrinsics camera intrinsics (K, dist_coeffs)
+ * @param camera_T_cloud Isometry that maps points in cloud frame to camera
+ * frame (i.e. p_cam = camera_T_cloud * p_cloud)
+ * @return cv::Mat
+ */
+cv::Mat projectPinholeLUT(
+    const PointCloudXf& cloud_in,
+    std::vector<std::pair<bool, cv::Point2i>>& inverse_lut,
+    const cv::Size image_size, const CameraIntrinsics camera_intrinsics,
+    const Eigen::Isometry3f& camera_T_cloud) {
+  inverse_lut.clear();
+  inverse_lut.resize(cloud_in.points.size());
+
+  const auto& fields = cloud_in.fields;
+
+  std::vector<int32_t> points_indices;
+  std::vector<cv::Vec3f> points_cv;
+  for (unsigned int i = 0; i < cloud_in.points.size(); ++i) {
+    const auto& p = cloud_in.points[i];
+    const auto p_cam = camera_T_cloud * p.head<3>();
+    if (p_cam(fields.at("z").first) < 0) {
+      inverse_lut[i] = {false, cv::Point2i(0, 0)};
+      continue;
+    }
+
+    points_indices.push_back(i);
+    points_cv.push_back({p(fields.at("x").first),
+                         p(fields.at("y").first, p(fields.at("z").first))});
+  }
+
+  cv::Mat R, rvec, tvec;
+  cv::eigen2cv((Eigen::Matrix3f)camera_T_cloud.linear(), R);
+
+  cv::Rodrigues(R, rvec);
+  cv::eigen2cv((Eigen::Vector3f)camera_T_cloud.translation(), tvec);
+
+  std::vector<cv::Point2f> points_2d;
+  if (camera_intrinsics.dist_coeffs.cols == 4) {
+    cv::fisheye::projectPoints(points_cv, points_2d, rvec, tvec,
+                               camera_intrinsics.K,
+                               camera_intrinsics.dist_coeffs);
+  } else {
+    cv::projectPoints(points_cv, rvec, tvec, camera_intrinsics.K,
+                      camera_intrinsics.dist_coeffs, points_2d);
+  }
+
+  cv::Mat lut = cv::Mat_<int32_t>(image_size);
+  lut = -1;
+  for (unsigned int i = 0; i < points_2d.size(); ++i) {
+    // TODO: Check coordinate bounds on image_size
+    if (points_2d[i].x < 0 or points_2d[i].x >= image_size.width or
+        points_2d[i].y < 0 or points_2d[i].y >= image_size.height) {
+      inverse_lut[points_indices[i]] = {false, cv::Point2i(0, 0)};
+      continue;
+    }
+    // TODO: Save point_index on point_coordinate
+    lut.at<int32_t>(points_2d[i]) = points_indices[i];
+    inverse_lut[points_indices[i]] = {true, points_2d[i]};
+  }
+  return lut;
+}
 }  // namespace ca2lib
