@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
+#include <fstream>
 #include <opencv2/highgui.hpp>
 
 #include "ca2lib/io/ros.h"
@@ -42,6 +43,7 @@ ca2lib::Measurements measurement_vect;
 ca2lib::Solver solver;
 Eigen::Isometry3f camera_T_lidar;
 bool solution_found = false;
+std::ofstream fout_output;
 
 void data_callback(const sensor_msgs::PointCloud2::ConstPtr&,
                    const sensor_msgs::Image::ConstPtr&);
@@ -69,9 +71,14 @@ int main(int argc, char** argv) {
   ArgumentString topic_cloud(&parser, "l", "topic-cloud",
                              "sensor_msgs/PointCloud2 topic for lidar",
                              "/ouster/points");
-  ArgumentFlag use_approx_sync(
-      &parser, "a", "approx-sync",
-      "Use ApproximateTime synchronization policy instead of ExactTime policy");
+  ArgumentString output_planes_file(
+      &parser, "p", "output-planes",
+      "If set, write on output-file (typically "
+      ".txt) the pair <cloud-plane> <lidar-plane>",
+      "");
+  ArgumentFlag use_approx_sync(&parser, "a", "approx-sync",
+                               "Use ApproximateTime synchronization policy "
+                               "instead of ExactTime policy");
 
   parser.parse();
 
@@ -93,6 +100,8 @@ int main(int argc, char** argv) {
   spdlog::info("Reading camera intrinsics " + camera_intrinsics_f.value());
   camera_info = ca2lib::CameraIntrinsics::load(camera_intrinsics_f.value());
   extractor_camera.setCameraParams(camera_info.K, camera_info.dist_coeffs);
+
+  if (output_planes_file.isSet()) fout_output.open(output_planes_file.value());
 
   cv::namedWindow("Viewport");
   cv::namedWindow("Camera Image");
@@ -240,6 +249,16 @@ void updateViewport(int key_pressed) {
         std::cerr << "plane_lidar ="
                   << extractor_cloud.plane().normal().transpose() << std::endl;
 
+        if (fout_output.is_open()) {
+          const auto& p_cud = extractor_cloud.plane();
+          const auto& p_cam = extractor_camera.plane();
+          fout_output << p_cud.normal().x() << " " << p_cud.normal().y() << " "
+                      << p_cud.normal().z() << " " << p_cud.d();
+          fout_output << ", ";
+          fout_output << p_cam.normal().x() << " " << p_cam.normal().y() << " "
+                      << p_cam.normal().z() << " " << p_cam.d() << "\n";
+        }
+
         cv::Mat frame_detection = camera_image.clone();
         extractor_camera.drawPlane(frame_detection);
         cv::imshow("Plane Detection", frame_detection);
@@ -272,11 +291,11 @@ void updateViewport(int key_pressed) {
       break;
   }
   // Display reprojection
-  if (solution_found) {
-    cv::Mat cloud_reprojected =
-        projectLidar(camera_image, cloud, camera_T_lidar);
-    cv::imshow("Reprojection", cloud_reprojected);
-  }
+  // if (solution_found) {
+  //   cv::Mat cloud_reprojected =
+  //       projectLidar(camera_image, cloud, camera_T_lidar);
+  //   cv::imshow("Reprojection", cloud_reprojected);
+  // }
 }
 
 void mouseCallback(int event, int x, int y, int flags, void*) {
