@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <random>
 #include <iostream>
+#include <fstream>
 
 namespace ca2lib {
 
@@ -158,7 +159,6 @@ bool Solver::compute() {
     eigensolver.compute(_H);
     Vector6f eigen_values = eigensolver.eigenvalues().real();
 
-    std::cerr << "EIGENVALUES: "<< eigen_values.transpose() << std::endl;
     float eigen_val_min, eigen_val_max;
     eigen_val_min = eigen_values.minCoeff();
     eigen_val_max = eigen_values.maxCoeff();
@@ -202,6 +202,16 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
   jacobian_.block<1,3>(3,0) = moving.normal().transpose();
   
   return m_stat;
+}
+
+void Solver::dumpResult(std::string filename) const{
+  std::ofstream file(filename);
+
+  for(const auto& m: _measurements) {
+    file << _estimate * m.from << ", " << m.to << std::endl;
+  }
+
+  file.close();
 }
 
 }  // namespace ca2lib

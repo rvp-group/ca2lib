@@ -16,6 +16,9 @@ target_link_libraries(calibrate_camera PRIVATE ca2lib spdlog)
 add_executable(calibrate_lidar_camera calibrate_lidar_camera.cpp)
 target_link_libraries(calibrate_lidar_camera PRIVATE ca2lib spdlog)
 
+add_executable(calibrate_lidar_camera_offline calibrate_lidar_camera_offline.cpp)
+target_link_libraries(calibrate_lidar_camera_offline PRIVATE ca2lib spdlog)
+
 add_executable(compare_projections compare_projections.cpp)
 target_link_libraries(compare_projections PRIVATE ca2lib spdlog)
 

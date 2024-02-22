@@ -53,8 +53,8 @@ Plane PlaneExtractorLidar::fitPlaneSVD(
 
   Eigen::JacobiSVD<Eigen::MatrixXf> svd(cov, Eigen::ComputeThinV);
   Eigen::Vector3f normal = svd.matrixV().rightCols<1>();
-  float c = -mean.dot(normal);
-  if (c < 0) {
+  float c = mean.dot(normal);
+  if (c > 0) {
     normal = -normal;
     c = -c;
   }

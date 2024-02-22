@@ -119,7 +119,7 @@ struct Plane {
    * @return return the distance as a float
    */
   inline float distancePointToPlane(const Eigen::Vector3f& point_) const {
-    return (point_ - pointInPlane()).dot(_normal);
+    return (pointInPlane() + point_).dot(_normal);
   }
 
   friend std::ostream& operator<<(std::ostream& out_, const Plane& p_);
@@ -131,7 +131,7 @@ struct Plane {
 };
 
 inline std::ostream& operator<<(std::ostream& out_, const Plane& p_) {
-  out_ << "normal: " << p_.normal() << ", " << p_.d() << "\n";
+  out_ << p_.normal().transpose() << " " << p_.d();
   return out_;
 }
 
@@ -211,6 +211,32 @@ struct CameraIntrinsics {
    * @return CameraIntrinsics
    */
   static CameraIntrinsics load(const std::string& f);
+};
+
+struct CameraLidarExtrinsics {
+  Eigen::Isometry3f lidar_in_camera;
+  Eigen::Isometry3f camera_in_lidar;
+
+  /**
+   * @brief Save parameters in a [JSON|YAML] file
+   *
+   * @param f destination path
+   *
+   */
+  void save(const std::string& f) const;
+  /**
+   * @brief Load parameters from a previously [JSON|YAML] file
+   *
+   * @param f source path
+   * @return CameraLidarExtrinsics
+   */
+  static CameraLidarExtrinsics load(const std::string& f);
+
+  CameraLidarExtrinsics() = default;
+  CameraLidarExtrinsics(Eigen::Isometry3f lidar_in_camera_):
+    lidar_in_camera(lidar_in_camera_),
+    camera_in_lidar(lidar_in_camera.inverse()){};
+  
 };
 
 // Inverse LookUp Table

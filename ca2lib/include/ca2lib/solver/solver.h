@@ -199,6 +199,8 @@ class Solver {
     return _inlier_th;
   }
 
+  void dumpResult(std::string filename) const;
+
  protected:
  
   MeasurementStat errorAndJacobian(const Measurement& measurement_,

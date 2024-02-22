@@ -33,6 +33,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
+
 namespace ca2lib {
 
 void CameraIntrinsics::save(const std::string& f) const {
@@ -85,4 +88,83 @@ CameraIntrinsics CameraIntrinsics::load(const std::string& f) {
   }
   return res;
 }
+
+void eigenMatrixToYamlNode(YAML::Node& node, Eigen::Isometry3f isometry) {
+  for(int r=0; r < 3; ++r) {
+    for (int c=0; c < 4; ++c) {
+      node.push_back(isometry.matrix()(r,c));
+    }
+  }
+  return;
+}
+
+void eigenMatrixRodriguesToYamlNode(YAML::Node& node, Eigen::Isometry3f isometry) {
+  cv::Mat R, rvec;
+  cv::eigen2cv((Eigen::Matrix3f)isometry.linear(), R);
+  cv::Rodrigues(R, rvec);
+  for(int r=0; r < 3; ++r) {
+    node.push_back(rvec.at<double>(0,r));
+  }
+  for (int r = 0; r<3; ++r) {
+    node.push_back(isometry.translation()(r));
+  }
+  return;
+}
+
+void CameraLidarExtrinsics::save(const std::string& f) const {
+  namespace fs = std::filesystem;
+  fs::path filename = f;
+  if (filename.extension() == ".yaml") {
+    YAML::Node conf;
+    YAML::Node storage_l_in_c, storage_c_in_l;
+    eigenMatrixToYamlNode(storage_l_in_c, lidar_in_camera);
+    eigenMatrixToYamlNode(storage_c_in_l, camera_in_lidar);
+
+    conf["lidar_in_camera"] = storage_l_in_c;
+    conf["camera_in_lidar"] = storage_c_in_l;
+
+    YAML::Node storage_l_in_c_r, storage_c_in_l_r;
+
+    eigenMatrixRodriguesToYamlNode(storage_l_in_c_r, lidar_in_camera);
+    eigenMatrixRodriguesToYamlNode(storage_c_in_l_r, camera_in_lidar);
+
+    conf["lidar_in_camera_rodrigues"] = storage_l_in_c_r;
+    conf["camera_in_lidar_rodrigues"] = storage_c_in_l_r;
+
+    YAML::Emitter emitter;
+    emitter << conf;
+    std::ofstream fout(f);
+    fout << emitter.c_str();
+    return;
+  } else if (filename.extension() == ".json") {
+    throw std::runtime_error("JSON configurations are currently not supported");
+  } else {
+    throw std::runtime_error("Format configuration is currently not supported");
+  }
+  return;
+}
+
+CameraLidarExtrinsics CameraLidarExtrinsics::load(const std::string& f) {
+  namespace fs = std::filesystem;
+  fs::path filename = f;
+  CameraLidarExtrinsics res;
+  if (filename.extension() == ".yaml") {
+    const auto config = YAML::LoadFile(f);
+
+    for (int r = 0; r < 3; r++) {
+      for(int c = 0; c < 4; c++) {
+        res.lidar_in_camera.matrix()(r,c) = config["lidar_in_camera"][r*4+c].as<double>();
+      }
+    }
+
+    res.camera_in_lidar = res.lidar_in_camera.inverse();
+
+  } else if (filename.extension() == ".json") {
+    throw std::runtime_error("JSON configurations are currently not supported");
+  } else {
+    throw std::runtime_error("Format configuration is currently not supported");
+  }
+  return res;
+}
+
 }  // namespace ca2lib

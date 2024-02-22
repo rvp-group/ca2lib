@@ -74,7 +74,12 @@ int main(int argc, char** argv) {
   ArgumentString output_planes_file(
       &parser, "p", "output-planes",
       "If set, write on output-file (typically "
-      ".txt) the pair <cloud-plane> <lidar-plane>",
+      ".txt) the pair <cloud-plane> <camera-plane>",
+      "");
+  ArgumentString output_transformed_planes_file(
+      &parser, "tp", "transformed-planes",
+      "If set, write on transformed-planes-file (typically "
+      ".txt) the pair <cloud-plane> <camera-plane>",
       "");
   ArgumentFlag use_approx_sync(&parser, "a", "approx-sync",
                                "Use ApproximateTime synchronization policy "
@@ -150,6 +155,14 @@ int main(int argc, char** argv) {
       }
       updateViewport(cv::waitKey(10));
     }
+  }
+
+  ca2lib::CameraLidarExtrinsics camera_lidar_extrinsics(camera_T_lidar);
+  camera_lidar_extrinsics.save(output_f.value());
+
+  if (output_transformed_planes_file.isSet()) {
+    solver.dumpResult(output_transformed_planes_file.value());
+    
   }
 
   return 0;
@@ -271,10 +284,12 @@ void updateViewport(int key_pressed) {
 
         if (measurement_vect.size() > 3) {
           spdlog::info("Solving extrinsics camera_T_lidar");
+          solver.estimate() = Eigen::Isometry3f::Identity();
           solver.measurements() = measurement_vect;
-          solver.dumping() = 1;
+          solver.dumping() = 10;
           solver.iterations() = 10;
-          solver.inlierTh() = 10.f;
+          solver.inlierTh() = 3.f;
+          solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1, std::placeholders::_2, 0.1f));
           solver.compute();
 
           std::cerr << solver.stats() << std::endl;
@@ -282,7 +297,8 @@ void updateViewport(int key_pressed) {
           camera_T_lidar = solver.estimate();
           std::cerr << "camera_T_lidar:\n"
                     << camera_T_lidar.matrix() << std::endl;
-          solution_found = true;
+          if(solver.stats().back().status == ca2lib::IterationStat::SolverStatus::Success)
+            solution_found = true;
         }
       }
       break;
@@ -291,11 +307,11 @@ void updateViewport(int key_pressed) {
       break;
   }
   // Display reprojection
-  // if (solution_found) {
-  //   cv::Mat cloud_reprojected =
-  //       projectLidar(camera_image, cloud, camera_T_lidar);
-  //   cv::imshow("Reprojection", cloud_reprojected);
-  // }
+  if (solution_found) {
+    cv::Mat cloud_reprojected =
+        projectLidar(camera_image, cloud, camera_T_lidar);
+    cv::imshow("Reprojection", cloud_reprojected);
+  }
 }
 
 void mouseCallback(int event, int x, int y, int flags, void*) {
