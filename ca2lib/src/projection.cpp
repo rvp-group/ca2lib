@@ -262,16 +262,22 @@ cv::Mat projectPinholeLUT(
     }
 
     points_indices.push_back(i);
-    points_cv.push_back({p(fields.at("x").first),
-                         p(fields.at("y").first, p(fields.at("z").first))});
+    // points_cv.push_back({p(fields.at("x").first),
+    //                      p(fields.at("y").first, p(fields.at("z").first))});
+    points_cv.push_back({p_cam.x(), p_cam.y(), p_cam.z()});
+                         
   }
 
-  cv::Mat R, rvec, tvec;
-  cv::eigen2cv((Eigen::Matrix3f)camera_T_cloud.linear(), R);
+  // cv::Mat R, rvec, tvec;
+  // cv::eigen2cv((Eigen::Matrix3f)camera_T_cloud.linear(), R);
 
-  cv::Rodrigues(R, rvec);
-  cv::eigen2cv((Eigen::Vector3f)camera_T_cloud.translation(), tvec);
+  // cv::Rodrigues(R, rvec);
+  // cv::eigen2cv((Eigen::Vector3f)camera_T_cloud.translation(), tvec);
 
+  cv::Mat rvec(3, 1, CV_32F);
+  cv::Mat tvec(3, 1, CV_32F);
+  rvec = 0;
+  tvec = 0;
   std::vector<cv::Point2f> points_2d;
   if (camera_intrinsics.dist_coeffs.cols == 4) {
     cv::fisheye::projectPoints(points_cv, points_2d, rvec, tvec,
@@ -293,8 +299,10 @@ cv::Mat projectPinholeLUT(
     }
     // TODO: Save point_index on point_coordinate
     lut.at<int32_t>(points_2d[i]) = points_indices[i];
+    std::cerr << &points_indices[i] << " " << &tumadre << std::endl;
     inverse_lut[points_indices[i]] = {true, points_2d[i]};
   }
+
   return lut;
 }
 }  // namespace ca2lib

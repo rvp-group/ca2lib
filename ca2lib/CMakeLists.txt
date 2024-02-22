@@ -6,7 +6,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
-
 # set(CMAKE_BUILD_TYPE Release)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
