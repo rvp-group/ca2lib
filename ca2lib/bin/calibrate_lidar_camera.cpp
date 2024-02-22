@@ -162,9 +162,9 @@ int main(int argc, char** argv) {
 
   if (output_transformed_planes_file.isSet()) {
     solver.dumpResult(output_transformed_planes_file.value());
-    spdlog::info("To inspect the result compare the planes before and after calibration:\n");
-    spdlog::info("python3 plot_planes.py --input_file planes.txt\n");
-    spdlog::info("python3 plot_planes.py --input_file transformed_planes.txt\n");
+    spdlog::info("To inspect the result compare the planes before and after calibration:");
+    spdlog::info("python3 plot_planes.py --input_file {}", output_planes_file.value());
+    spdlog::info("python3 plot_planes.py --input_file {}", output_transformed_planes_file.value());
   }
 
   return 0;
