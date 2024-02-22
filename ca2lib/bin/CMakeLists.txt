@@ -25,5 +25,5 @@ target_link_libraries(compare_projections PRIVATE ca2lib spdlog)
 add_executable(solver_camera_lidar solver_camera_lidar.cpp)
 target_link_libraries(solver_camera_lidar PRIVATE ca2lib spdlog)
 
-add_executable(visualize_lidar_in_camera visualize_lidar_in_camera)
-target_link_libraries(visualize_lidar_in_camera PRIVATE ca2lib spdlog)
+add_executable(visualize_lidar_camera visualize_lidar_camera)
+target_link_libraries(visualize_lidar_camera PRIVATE ca2lib spdlog)
