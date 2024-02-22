@@ -1,0 +1,29 @@
+add_executable(cloud_projection_example cloud_projection_example.cpp)
+target_link_libraries(cloud_projection_example PRIVATE ca2lib)
+
+add_executable(cloud_plane_estimator cloud_plane_estimator.cpp)
+target_link_libraries(cloud_plane_estimator PRIVATE ca2lib)
+
+add_executable(cloud_plane_estimator_interactive cloud_plane_estimator_interactive.cpp)
+target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
+
+add_executable(stereo_recorder stereo_recorder.cpp)
+target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
+
+add_executable(calibrate_camera calibrate_camera.cpp)
+target_link_libraries(calibrate_camera PRIVATE ca2lib spdlog)
+
+add_executable(calibrate_lidar_camera calibrate_lidar_camera.cpp)
+target_link_libraries(calibrate_lidar_camera PRIVATE ca2lib spdlog)
+
+add_executable(calibrate_lidar_camera_offline calibrate_lidar_camera_offline.cpp)
+target_link_libraries(calibrate_lidar_camera_offline PRIVATE ca2lib spdlog)
+
+add_executable(compare_projections compare_projections.cpp)
+target_link_libraries(compare_projections PRIVATE ca2lib spdlog)
+
+add_executable(solver_camera_lidar solver_camera_lidar.cpp)
+target_link_libraries(solver_camera_lidar PRIVATE ca2lib spdlog)
+
+add_executable(visualize_lidar_camera visualize_lidar_camera)
+target_link_libraries(visualize_lidar_camera PRIVATE ca2lib spdlog)
