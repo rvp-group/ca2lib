@@ -102,7 +102,6 @@ cv::Mat projectLidar(const cv::Mat& image_rgb,
     if (inv_lut[i].first)
       cv::circle(ret, inv_lut[i].second, 3, {0, 0, 255}, -1);
   }
-  std::cerr << &ret << std::endl;
   return ret;
 }
 

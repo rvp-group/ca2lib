@@ -298,9 +298,9 @@ cv::Mat projectPinholeLUT(
       continue;
     }
     // TODO: Save point_index on point_coordinate
-    lut.at<int32_t>(points_2d[i]) = points_indices[i];
-    std::cerr << &points_indices[i] << " " << &tumadre << std::endl;
-    inverse_lut[points_indices[i]] = {true, points_2d[i]};
+    cv::Point2i index = cv::Point2i(points_2d[i].x, points_2d[i].y);
+    lut.at<int32_t>(index) = points_indices[i];
+    inverse_lut[points_indices[i]] = {true, index};
   }
 
   return lut;
