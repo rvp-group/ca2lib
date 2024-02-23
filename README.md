@@ -1,3 +1,4 @@
+![](https://github.com/rvp-group/ca2lib/wiki/images/ca2lib_title.png)
 Ca2Lib is an open-source `LiDAR-Camera[RGB]` calibration toolbox.
 
 # 🚀 Usage
