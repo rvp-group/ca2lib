@@ -1,6 +1,6 @@
 Ca2Lib is an open-source `LiDAR-Camera[RGB]` calibration toolbox.
 
-# Usage
+# 🚀 Usage
 
 To calibrate your camera(s), first generate a [target configuration file](todo), gather your sensors/bag and run:
 ```bash
@@ -43,7 +43,7 @@ rosrun ca2lib visualize_lidar_in_camera \
     -e <lidar_in_cam.yaml>
 ```
 
-# Setup
+# 👷 Setup
 
 We suggest running `ca2lib` using Docker. Simply `cd` into the repository and build the Docker image:
 
@@ -78,11 +78,11 @@ catkin build ca2lib
 ```
 
 
-# News
+# 📰 News
 
 22/02/2024: Version 0.0.0 is released!
 
-# Cite us!
+# 📖 Cite us!
 
 ```
 @Article{s24030956,
