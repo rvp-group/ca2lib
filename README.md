@@ -83,20 +83,17 @@ catkin build ca2lib
 
 22/02/2024: Version 0.0.0 is released!
 
-# 📖 Cite us!
-
+# 📖 Cite us
+If you use any of this code here the reference
 ```
-@Article{s24030956,
-AUTHOR = {Giacomini, Emanuele and Brizi, Leonardo and Di Giammarino, Luca and Salem, Omar and Perugini, Patrizio and Grisetti, Giorgio},
-TITLE = {Ca2Lib: Simple and Accurate LiDAR-RGB Calibration Using Small Common Markers},
-JOURNAL = {Sensors},
-VOLUME = {24},
-YEAR = {2024},
-NUMBER = {3},
-ARTICLE-NUMBER = {956},
-PubMedID = {38339673},
-ISSN = {1424-8220},
-DOI = {10.3390/s24030956}
+@article{giac2024ca2lib,
+    author = {Giacomini, Emanuele and Brizi, Leonardo and Di Giammarino, Luca and Salem, Omar and Perugini, Patrizio and Grisetti, Giorgio},
+    title = {Ca2Lib: Simple and Accurate LiDAR-RGB Calibration Using Small Common Markers},
+    journal = {Sensors},
+    volume = {24},
+    year = {2024},
+    number = {3},
+    doi = {10.3390/s24030956}
 }
 ```
 
