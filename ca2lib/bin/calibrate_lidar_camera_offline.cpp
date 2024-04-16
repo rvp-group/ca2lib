@@ -89,14 +89,13 @@ int main(int argc, char** argv) {
                          "Input file containing the planes", "");
 
   ArgumentFloat inlier_threshold(
-      &parser, "t", "--threshold-inlier",
+      &parser, "t", "threshold-inlier",
       "Threshold for a measurement to be considered inlier", 3.0f);
 
-  ArgumentInt no_iterations(&parser, "n", "--iterations",
+  ArgumentInt no_iterations(&parser, "n", "iterations",
                             "Number of solver iterations", 10);
-  ArgumentFloat damping_factor(&parser, "d", "--damping", "Damping factor",
-                               10.f);
-  ArgumentFloat huber_delta(&parser, "l", "--huber", "Huber threshold", 0.1f);
+  ArgumentFloat damping_factor(&parser, "d", "damping", "Damping factor", 10.f);
+  ArgumentFloat huber_delta(&parser, "l", "huber", "Huber threshold", 0.1f);
   parser.parse();
 
   if (!input_f.isSet()) {
