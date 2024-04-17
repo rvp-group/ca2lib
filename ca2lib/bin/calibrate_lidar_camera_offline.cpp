@@ -1,12 +1,11 @@
-#include <iostream>
+#include <ros/ros.h>
+#include <spdlog/fmt/ostr.h>
+#include <spdlog/spdlog.h>
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
-#include <ros/ros.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
-
-#include "ca2lib/parse_command_line.h"
 #include "ca2lib/parse_command_line.h"
 #include "ca2lib/solver/solver.h"
 #include "ca2lib/types.h"
@@ -19,7 +18,6 @@ ca2lib::Solver solver;
 Eigen::Isometry3f camera_T_lidar;
 
 ca2lib::Measurements uploadMeasurements(std::string file_name) {
-
   ca2lib::Measurements measurements;
 
   std::ifstream file(file_name);
@@ -56,23 +54,22 @@ ca2lib::Measurements uploadMeasurements(std::string file_name) {
       vec[2] = std::stof(line);
       std::getline(iss, line, '\n');
       vec[3] = std::stof(line);
-      
+
       plane_camera << vec;
 
       measurement.from = plane_lidar;
-      measurement.to   = plane_camera;
+      measurement.to = plane_camera;
       measurement.id = id++;
       measurements.push_back(measurement);
 
       spdlog::set_level(spdlog::level::debug);
       spdlog::debug("lidar plane: {}", plane_lidar);
       spdlog::debug("camera plane: {}", plane_camera);
-
     }
 
     file.close();
   } else {
-    spdlog::error("Unable to open file: "+file_name);
+    spdlog::error("Unable to open file: " + file_name);
   }
 
   return measurements;
@@ -89,8 +86,16 @@ int main(int argc, char** argv) {
                              "Planes transformed after calibration",
                              "transformed_planes.txt");
   ArgumentString input_f(&parser, "i", "input",
-                          "Input file containing the planes", "");
+                         "Input file containing the planes", "");
 
+  ArgumentFloat inlier_threshold(
+      &parser, "t", "threshold-inlier",
+      "Threshold for a measurement to be considered inlier", 3.0f);
+
+  ArgumentInt no_iterations(&parser, "n", "iterations",
+                            "Number of solver iterations", 10);
+  ArgumentFloat damping_factor(&parser, "d", "damping", "Damping factor", 10.f);
+  ArgumentFloat huber_delta(&parser, "l", "huber", "Huber threshold", 0.1f);
   parser.parse();
 
   if (!input_f.isSet()) {
@@ -106,11 +111,11 @@ int main(int argc, char** argv) {
   if (measurements.size() > 3) {
     spdlog::info("Solving extrinsics camera_T_lidar");
     solver.measurements() = measurements;
-    // solver.estimate().matrix() << 0, -1, 0, -0.3, 0, 0, -1, -0.53, 1, 0, 0, -0.01, 0, 0, 0, 1;
-    solver.dumping() = 10;
-    solver.iterations() = 10;
-    solver.inlierTh() = 3.f;
-    solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1, std::placeholders::_2, 0.1f));
+    solver.dumping() = damping_factor.value();
+    solver.iterations() = no_iterations.value();
+    solver.inlierTh() = inlier_threshold.value();
+    solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1,
+                                   std::placeholders::_2, huber_delta.value()));
     solver.compute();
 
     spdlog::set_level(spdlog::level::debug);
@@ -119,7 +124,8 @@ int main(int argc, char** argv) {
     camera_T_lidar = solver.estimate();
     spdlog::debug("camera_T_lidar: \n{}\n", camera_T_lidar.matrix());
     spdlog::info("Solving terminated");
-    if(solver.stats().back().status != ca2lib::IterationStat::SolverStatus::Success)
+    if (solver.stats().back().status !=
+        ca2lib::IterationStat::SolverStatus::Success)
       spdlog::error("Solving fails\n");
 
     ca2lib::CameraLidarExtrinsics camera_lidar_extrinsics(camera_T_lidar);
@@ -132,6 +138,6 @@ int main(int argc, char** argv) {
     spdlog::error("No enough measurements.\n");
     return -1;
   }
-  
+
   return 0;
 }
