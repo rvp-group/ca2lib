@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,11 +33,11 @@
 #include "ca2lib/types.h"
 #include "ca2lib/geometry.h"
 
-
 TEST(ca2lib, SolverNotEnoughMeasurements) {
   ca2lib::Solver solver;
   ASSERT_FALSE(solver.compute());
-  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotEnoughMeasurements);
+  ASSERT_EQ(solver.stats().back().status,
+            ca2lib::IterationStat::SolverStatus::NotEnoughMeasurements);
 }
 
 TEST(ca2lib, SolverRandomMeasurement) {
@@ -46,10 +46,10 @@ TEST(ca2lib, SolverRandomMeasurement) {
   float eps = 1e-6;
 
   ca2lib::Vector6f pose;
-  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
+  pose << 0.5, 0.2, -0.3, 0.2, -0.2, 0.1;
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
-  for(uint i=0; i < plane_num; ++i) {
+  for (uint i = 0; i < plane_num; ++i) {
     ca2lib::Plane p{};
     p.setRandom();
 
@@ -57,7 +57,7 @@ TEST(ca2lib, SolverRandomMeasurement) {
     m.id = i;
     m.from = p;
     m.to = T * p;
-    
+
     measurements.push_back(m);
   }
 
@@ -73,14 +73,17 @@ TEST(ca2lib, SolverRandomMeasurement) {
   Eigen::Isometry3f res = T.inverse() * solver.estimate();
   std::cerr << res.matrix() - Eigen::Matrix4f::Identity() << std::endl;
 
-  std::cerr << "solver result: " << std::endl << solver.estimate().matrix() << std::endl;
+  std::cerr << "solver result: " << std::endl
+            << solver.estimate().matrix() << std::endl;
 
-  std::cerr << "solution covariance: " << std::endl << solver.informationMatrix().inverse() << std::endl;
-  
+  std::cerr << "solution covariance: " << std::endl
+            << solver.informationMatrix().inverse() << std::endl;
+
   Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
 
   ASSERT_TRUE(I.isApprox(res.matrix(), eps));
-  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::Success);
+  ASSERT_EQ(solver.stats().back().status,
+            ca2lib::IterationStat::SolverStatus::Success);
 }
 
 TEST(ca2lib, SolverRealCal) {
@@ -118,13 +121,13 @@ TEST(ca2lib, SolverRealCal) {
 
   std::cerr << measurements.size() << std::endl;
 
-
   ca2lib::Solver solver;
   solver.dumping() = 1;
   // solver.estimate() = T;
   solver.iterations() = 10;
   solver.measurements() = measurements;
-  solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1, std::placeholders::_2, 5.f));
+  solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1,
+                                 std::placeholders::_2, 5.f));
   solver.inlierTh() = 10.f;
   solver.compute();
 
@@ -132,32 +135,33 @@ TEST(ca2lib, SolverRealCal) {
 
   std::cerr << solver.stats() << std::endl;
 
-  std::cerr << "solver result: " << std::endl << solver.estimate().matrix() << std::endl;
+  std::cerr << "solver result: " << std::endl
+            << solver.estimate().matrix() << std::endl;
 
-  std::cerr << "solution covariance: " << std::endl << solver.informationMatrix().inverse() << std::endl;
-  
-  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::Success);
+  std::cerr << "solution covariance: " << std::endl
+            << solver.informationMatrix().inverse() << std::endl;
+
+  ASSERT_EQ(solver.stats().back().status,
+            ca2lib::IterationStat::SolverStatus::Success);
 }
 
 TEST(ca2lib, SolverNotWellConstrained) {
   ca2lib::Measurements measurements;
   ca2lib::Plane p;
-  p.normal() << 1,0,0;
+  p.normal() << 1, 0, 0;
   p.d() = 0;
   int plane_num = 6;
 
-
   ca2lib::Vector6f pose;
-  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
+  pose << 0.5, 0.2, -0.3, 0.2, -0.2, 0.1;
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
-  for(uint i=0; i < plane_num; ++i) {
-
+  for (uint i = 0; i < plane_num; ++i) {
     ca2lib::Measurement m;
     m.id = i;
     m.from = p;
     m.to = T * p;
-    
+
     measurements.push_back(m);
   }
 
@@ -170,7 +174,8 @@ TEST(ca2lib, SolverNotWellConstrained) {
   std::cerr << solver.stats() << std::endl;
 
   ASSERT_FALSE(solver.compute());
-  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::NotWellConstrained);
+  ASSERT_EQ(solver.stats().back().status,
+            ca2lib::IterationStat::SolverStatus::NotWellConstrained);
 }
 
 TEST(ca2lib, SolverUnBalance) {
@@ -179,27 +184,27 @@ TEST(ca2lib, SolverUnBalance) {
   float eps = 1e-6;
 
   ca2lib::Vector6f pose;
-  pose << 0.5,0.2,-0.3,0.2,-0.2,0.1;
+  pose << 0.5, 0.2, -0.3, 0.2, -0.2, 0.1;
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
   ca2lib::Plane p{};
-  for(uint i=0; i < plane_num; ++i) {
+  for (uint i = 0; i < plane_num; ++i) {
     p.setRandom();
 
     ca2lib::Measurement m;
     m.id = i;
     m.from = p;
     m.to = T * p;
-    
+
     measurements.push_back(m);
   }
 
-  for(uint i=1; i <= plane_num; ++i) {
+  for (uint i = 1; i <= plane_num; ++i) {
     ca2lib::Measurement m;
-    m.id = i+plane_num;
+    m.id = i + plane_num;
     m.from = p;
     m.to = T * p;
-    
+
     measurements.push_back(m);
   }
 
@@ -215,18 +220,20 @@ TEST(ca2lib, SolverUnBalance) {
   Eigen::Isometry3f res = T.inverse() * solver.estimate();
   std::cerr << res.matrix() - Eigen::Matrix4f::Identity() << std::endl;
 
-  std::cerr << "solver result: " << std::endl << solver.estimate().matrix() << std::endl;
+  std::cerr << "solver result: " << std::endl
+            << solver.estimate().matrix() << std::endl;
 
-  std::cerr << "solution covariance: " << std::endl << solver.informationMatrix().inverse() << std::endl;
-  
+  std::cerr << "solution covariance: " << std::endl
+            << solver.informationMatrix().inverse() << std::endl;
+
   Eigen::Matrix4f I = Eigen::Matrix4f::Identity();
 
   ASSERT_TRUE(I.isApprox(res.matrix(), eps));
-  ASSERT_EQ(solver.stats().back().status, ca2lib::IterationStat::SolverStatus::UnBalance);
+  ASSERT_EQ(solver.stats().back().status,
+            ca2lib::IterationStat::SolverStatus::UnBalance);
 }
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-

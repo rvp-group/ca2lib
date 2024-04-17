@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -41,22 +41,22 @@ std::ostream& operator<<(std::ostream& os, const IterationStat& istat_) {
   os << "it= " << istat_.iteration_number
      << "; num_inliers= " << istat_.num_inliers
      << "; chi_inliers= " << istat_.chi_inliers
-     << "; num_outliers= " << istat_.num_outliers 
+     << "; num_outliers= " << istat_.num_outliers
      << "; chi_outliers= " << istat_.chi_outliers;
   os << "; status= ";
   switch (istat_.status) {
-    case IterationStat::SolverStatus::Success :
+    case IterationStat::SolverStatus::Success:
       os << "Success";
-    break;
-    case IterationStat::SolverStatus::NotEnoughMeasurements :
+      break;
+    case IterationStat::SolverStatus::NotEnoughMeasurements:
       os << "NotEnoughMeasurements";
-    break;
-    case IterationStat::SolverStatus::NotWellConstrained :
+      break;
+    case IterationStat::SolverStatus::NotWellConstrained:
       os << "NotWellConstrained";
-    break;
-    case IterationStat::SolverStatus::UnBalance :
+      break;
+    case IterationStat::SolverStatus::UnBalance:
       os << "UnBalance";
-    break;
+      break;
     default:
       os << "StatusNotRecognized";
   }
@@ -73,7 +73,8 @@ std::ostream& operator<<(std::ostream& os, const SolverStat& stats_) {
   return os;
 }
 
-MeasurementStat::Status huber(const float& chi_, float& weight_, float error_threshold_) {
+MeasurementStat::Status huber(const float& chi_, float& weight_,
+                              float error_threshold_) {
   weight_ = 1.f;
   MeasurementStat::Status status;
   if (chi_ > error_threshold_) {
@@ -86,14 +87,13 @@ MeasurementStat::Status huber(const float& chi_, float& weight_, float error_thr
 
 Matrix6f Solver::updateH() const {
   Matrix6f H;
-  for (const auto& m: _measurements) {
+  for (const auto& m : _measurements) {
     ErrorType error;
     JacobianType J;
     float w;
     MeasurementStat m_stat = errorAndJacobian(m, error, J, w);
 
-    if ((error.transpose() * error) > _inlier_th)
-      continue;
+    if ((error.transpose() * error) > _inlier_th) continue;
 
     H += J.transpose() * J;
   }
@@ -101,8 +101,7 @@ Matrix6f Solver::updateH() const {
 }
 
 bool Solver::compute() {
-
-  if(_measurements.size() < 3) {
+  if (_measurements.size() < 3) {
     IterationStat stat{};
     stat.iteration_number = 0;
     stat.status = IterationStat::SolverStatus::NotEnoughMeasurements;
@@ -112,23 +111,23 @@ bool Solver::compute() {
 
   for (int i = 0; i < _iterations; ++i) {
     _H = Matrix6f::Zero();
-    _b = Vector6f::Zero();  
+    _b = Vector6f::Zero();
 
     IterationStat stat{};
-    stat.iteration_number = i+1;
+    stat.iteration_number = i + 1;
 
-    for (const auto& m: _measurements) {
+    for (const auto& m : _measurements) {
       ErrorType error;
       JacobianType J;
       float weight;
       MeasurementStat m_stat = errorAndJacobian(m, error, J, weight);
-      if(m_stat.chi > _inlier_th) {
+      if (m_stat.chi > _inlier_th) {
         m_stat.status = MeasurementStat::Status::Outlier;
       }
 
       stat.measurement_stats.insert({m.id, m_stat});
 
-      if(m_stat.status != MeasurementStat::Status::Outlier) {
+      if (m_stat.status != MeasurementStat::Status::Outlier) {
         stat.num_inliers++;
         stat.chi_inliers += error.dot(error) * weight;
       } else {
@@ -165,11 +164,12 @@ bool Solver::compute() {
 
     _H += Matrix6f::Identity() * _dumping;
     Vector6f delta_X = QrDec.solve(-_b);
-    _estimate =  v2t(delta_X) * _estimate;
+    _estimate = v2t(delta_X) * _estimate;
 
     _omega = updateH();
 
-    if (abs(floor(log10(abs(eigen_val_min))) - floor(log10(abs(eigen_val_max)))) >= 1)
+    if (abs(floor(log10(abs(eigen_val_min))) -
+            floor(log10(abs(eigen_val_max)))) >= 1)
       stat.status = IterationStat::SolverStatus::UnBalance;
     else
       stat.status = IterationStat::SolverStatus::Success;
@@ -181,10 +181,10 @@ bool Solver::compute() {
 }
 
 MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
-                                 ErrorType& error_,
-                                 JacobianType& jacobian_,
-                                 float& weight_,
-                                 bool error_only_) const {
+                                         ErrorType& error_,
+                                         JacobianType& jacobian_,
+                                         float& weight_,
+                                         bool error_only_) const {
   Plane moving = _estimate * measurement_.from;
   error_ = moving - measurement_.to;
   float chi = error_.dot(error_);
@@ -194,20 +194,19 @@ MeasurementStat Solver::errorAndJacobian(const Measurement& measurement_,
   m_stat.status = status;
   m_stat.chi = chi;
 
-  if(error_only_)
-    return m_stat;
+  if (error_only_) return m_stat;
 
   jacobian_ = JacobianType::Zero();
-  jacobian_.block<3,3>(0,3) = - skew(moving.normal());
-  jacobian_.block<1,3>(3,0) = moving.normal().transpose();
-  
+  jacobian_.block<3, 3>(0, 3) = -skew(moving.normal());
+  jacobian_.block<1, 3>(3, 0) = moving.normal().transpose();
+
   return m_stat;
 }
 
-void Solver::dumpResult(std::string filename) const{
+void Solver::dumpResult(std::string filename) const {
   std::ofstream file(filename);
 
-  for(const auto& m: _measurements) {
+  for (const auto& m : _measurements) {
     file << _estimate * m.from << ", " << m.to << std::endl;
   }
 

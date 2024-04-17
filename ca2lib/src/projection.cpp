@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -265,7 +265,6 @@ cv::Mat projectPinholeLUT(
     // points_cv.push_back({p(fields.at("x").first),
     //                      p(fields.at("y").first, p(fields.at("z").first))});
     points_cv.push_back({p_cam.x(), p_cam.y(), p_cam.z()});
-                         
   }
 
   // cv::Mat R, rvec, tvec;

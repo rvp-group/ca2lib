@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -233,10 +233,9 @@ struct CameraLidarExtrinsics {
   static CameraLidarExtrinsics load(const std::string& f);
 
   CameraLidarExtrinsics() = default;
-  CameraLidarExtrinsics(Eigen::Isometry3f lidar_in_camera_):
-    lidar_in_camera(lidar_in_camera_),
-    camera_in_lidar(lidar_in_camera.inverse()){};
-  
+  CameraLidarExtrinsics(Eigen::Isometry3f lidar_in_camera_)
+      : lidar_in_camera(lidar_in_camera_),
+        camera_in_lidar(lidar_in_camera.inverse()){};
 };
 
 // Inverse LookUp Table

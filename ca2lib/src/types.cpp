@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -90,22 +90,23 @@ CameraIntrinsics CameraIntrinsics::load(const std::string& f) {
 }
 
 void eigenMatrixToYamlNode(YAML::Node& node, Eigen::Isometry3f isometry) {
-  for(int r=0; r < 3; ++r) {
-    for (int c=0; c < 4; ++c) {
-      node.push_back(isometry.matrix()(r,c));
+  for (int r = 0; r < 3; ++r) {
+    for (int c = 0; c < 4; ++c) {
+      node.push_back(isometry.matrix()(r, c));
     }
   }
   return;
 }
 
-void eigenMatrixRodriguesToYamlNode(YAML::Node& node, Eigen::Isometry3f isometry) {
+void eigenMatrixRodriguesToYamlNode(YAML::Node& node,
+                                    Eigen::Isometry3f isometry) {
   cv::Mat R, rvec;
   cv::eigen2cv((Eigen::Matrix3f)isometry.linear(), R);
   cv::Rodrigues(R, rvec);
-  for(int r=0; r < 3; ++r) {
-    node.push_back(rvec.at<double>(0,r));
+  for (int r = 0; r < 3; ++r) {
+    node.push_back(rvec.at<double>(0, r));
   }
-  for (int r = 0; r<3; ++r) {
+  for (int r = 0; r < 3; ++r) {
     node.push_back(isometry.translation()(r));
   }
   return;
@@ -152,8 +153,9 @@ CameraLidarExtrinsics CameraLidarExtrinsics::load(const std::string& f) {
     const auto config = YAML::LoadFile(f);
 
     for (int r = 0; r < 3; r++) {
-      for(int c = 0; c < 4; c++) {
-        res.lidar_in_camera.matrix()(r,c) = config["lidar_in_camera"][r*4+c].as<double>();
+      for (int c = 0; c < 4; c++) {
+        res.lidar_in_camera.matrix()(r, c) =
+            config["lidar_in_camera"][r * 4 + c].as<double>();
       }
     }
 

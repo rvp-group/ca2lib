@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,91 +34,85 @@
 
 namespace ca2lib {
 
-  using Matrix6f = Eigen::Matrix<float, 6, 6>;
-  using Vector6f = Eigen::Matrix<float, 6, 1>;
+using Matrix6f = Eigen::Matrix<float, 6, 6>;
+using Vector6f = Eigen::Matrix<float, 6, 1>;
 
-  /**
-   * @brief Compute the skew matrix 3x3 of a vector 3x1
-   * @param vec
-   * @return return the skew matrix Eigen::Matrix3f  
-   */
-  inline Eigen::Matrix3f skew(const Eigen::Vector3f& vec) {
-    Eigen::Matrix3f skew = Eigen::Matrix3f::Zero();
-    skew(0,1) = -vec.z();
-    skew(0,2) = vec.y();
-    skew(1,0) = vec.z();
-    skew(1,2) = -vec.x();
-    skew(2,0) = -vec.y();
-    skew(2,1) = vec.x();
-    return skew;
-  }
+/**
+ * @brief Compute the skew matrix 3x3 of a vector 3x1
+ * @param vec
+ * @return return the skew matrix Eigen::Matrix3f
+ */
+inline Eigen::Matrix3f skew(const Eigen::Vector3f& vec) {
+  Eigen::Matrix3f skew = Eigen::Matrix3f::Zero();
+  skew(0, 1) = -vec.z();
+  skew(0, 2) = vec.y();
+  skew(1, 0) = vec.z();
+  skew(1, 2) = -vec.x();
+  skew(2, 0) = -vec.y();
+  skew(2, 1) = vec.x();
+  return skew;
+}
 
-  /**
-   * @brief Compute the rotation matrix 3x3 around x-axis of angle rot_x_
-   * @param rot_x_
-   * @return return the rotation matrix Eigen::Matrix3f  
-   */
-  inline Eigen::Matrix3f Rx(const float& rot_x_) {
-    float c = cos(rot_x_);
-    float s = sin(rot_x_);
-    Eigen::Matrix3f R;
-    R << 1,  0,   0,
-         0,  c,  -s,
-         0,  s,   c;
-    return R;
-  }
+/**
+ * @brief Compute the rotation matrix 3x3 around x-axis of angle rot_x_
+ * @param rot_x_
+ * @return return the rotation matrix Eigen::Matrix3f
+ */
+inline Eigen::Matrix3f Rx(const float& rot_x_) {
+  float c = cos(rot_x_);
+  float s = sin(rot_x_);
+  Eigen::Matrix3f R;
+  R << 1, 0, 0, 0, c, -s, 0, s, c;
+  return R;
+}
 
-  /**
-   * @brief Compute the rotation matrix 3x3 around y-axis of angle rot_y_
-   * @param rot_y_
-   * @return return the rotation matrix Eigen::Matrix3f  
-   */
-  inline Eigen::Matrix3f Ry(const float& rot_y_) {
-    float c = cos(rot_y_);
-    float s = sin(rot_y_);
-    Eigen::Matrix3f R;
-    R << c,  0,  s,
-         0,  1,  0,
-        -s,  0,  c;
-    return R;
-  }
+/**
+ * @brief Compute the rotation matrix 3x3 around y-axis of angle rot_y_
+ * @param rot_y_
+ * @return return the rotation matrix Eigen::Matrix3f
+ */
+inline Eigen::Matrix3f Ry(const float& rot_y_) {
+  float c = cos(rot_y_);
+  float s = sin(rot_y_);
+  Eigen::Matrix3f R;
+  R << c, 0, s, 0, 1, 0, -s, 0, c;
+  return R;
+}
 
-  /**
-   * @brief Compute the rotation matrix 3x3 around z-axis of angle rot_z_
-   * @param rot_z_
-   * @return return the rotation matrix Eigen::Matrix3f  
-   */
-  inline Eigen::Matrix3f Rz(const float& rot_z_) {
-    float c = cos(rot_z_);
-    float s = sin(rot_z_);
-    Eigen::Matrix3f R;
-    R << c,  -s,  0,
-         s,   c,  0,
-         0,   0,  1;
-    return R;
-  }
+/**
+ * @brief Compute the rotation matrix 3x3 around z-axis of angle rot_z_
+ * @param rot_z_
+ * @return return the rotation matrix Eigen::Matrix3f
+ */
+inline Eigen::Matrix3f Rz(const float& rot_z_) {
+  float c = cos(rot_z_);
+  float s = sin(rot_z_);
+  Eigen::Matrix3f R;
+  R << c, -s, 0, s, c, 0, 0, 0, 1;
+  return R;
+}
 
-  /**
-   * @brief Compute the rotation matrix 3x3 from the Euler angles RPY
-   * @param a_
-   * @return return the rotation matrix Eigen::Matrix3f  
-   */
-  inline Eigen::Matrix3f angle2R(const Eigen::Vector3f& a_) {
-    Eigen::Matrix3f R;
-    R = Rx(a_(0))*Ry(a_(1))*Rz(a_(2));
-    return R;
-  }
+/**
+ * @brief Compute the rotation matrix 3x3 from the Euler angles RPY
+ * @param a_
+ * @return return the rotation matrix Eigen::Matrix3f
+ */
+inline Eigen::Matrix3f angle2R(const Eigen::Vector3f& a_) {
+  Eigen::Matrix3f R;
+  R = Rx(a_(0)) * Ry(a_(1)) * Rz(a_(2));
+  return R;
+}
 
-  /**
-   * @brief Compute the Isometry (R,t) from vec_ compose by 
-   * translation and euler angles
-   * @param vec_
-   * @return return the Isometry 
-   */
-  inline Eigen::Isometry3f v2t(const Vector6f& vec_) {
-    Eigen::Isometry3f T = Eigen::Isometry3f::Identity();
-    T.translation()       = vec_.head<3>();
-    T.linear()            = angle2R(vec_.tail<3>());
-    return T;
-  }
+/**
+ * @brief Compute the Isometry (R,t) from vec_ compose by
+ * translation and euler angles
+ * @param vec_
+ * @return return the Isometry
+ */
+inline Eigen::Isometry3f v2t(const Vector6f& vec_) {
+  Eigen::Isometry3f T = Eigen::Isometry3f::Identity();
+  T.translation() = vec_.head<3>();
+  T.linear() = angle2R(vec_.tail<3>());
+  return T;
+}
 }  // namespace ca2lib

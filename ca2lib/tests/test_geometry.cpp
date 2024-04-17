@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,70 +33,68 @@
 
 #define EPS 1e-4
 
-
 TEST(ca2lib, TestskewMatrix) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
+  vec << 1, 2, 3;
   Eigen::Matrix3f skew = ca2lib::skew(vec);
   Eigen::Matrix3f skew_t = -1 * skew.transpose();
   ASSERT_TRUE(skew.isApprox(skew_t, EPS));
 }
 
-
 TEST(ca2lib, TestRx) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
-  
+  vec << 1, 2, 3;
+
   Eigen::Matrix3f rx = ca2lib::Rx(0.3f);
 
   Eigen::Vector3f rotated_vec;
-  rotated_vec << 1.0000,1.0241,3.4570;
+  rotated_vec << 1.0000, 1.0241, 3.4570;
 
   ASSERT_TRUE(rotated_vec.isApprox(rx * vec, EPS));
 }
 
 TEST(ca2lib, TestRy) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
-  
+  vec << 1, 2, 3;
+
   Eigen::Matrix3f ry = ca2lib::Ry(0.3f);
 
   Eigen::Vector3f rotated_vec;
-  rotated_vec << 1.8419,2.0000,2.5705;
+  rotated_vec << 1.8419, 2.0000, 2.5705;
 
   ASSERT_TRUE(rotated_vec.isApprox(ry * vec, EPS));
 }
 
 TEST(ca2lib, TestRz) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
-  
+  vec << 1, 2, 3;
+
   Eigen::Matrix3f rz = ca2lib::Rz(0.3f);
 
   Eigen::Vector3f rotated_vec;
-  rotated_vec << 0.36430,2.20619,3.00000;
+  rotated_vec << 0.36430, 2.20619, 3.00000;
 
   ASSERT_TRUE(rotated_vec.isApprox(rz * vec, EPS));
 }
 
 TEST(ca2lib, Testv2tIdentity) {
   ca2lib::Vector6f pose;
-  pose <<0,0,0,0,0,0;
+  pose << 0, 0, 0, 0, 0, 0;
 
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
   Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
   Eigen::Vector3f t;
-  t << 0,0,0;
+  t << 0, 0, 0;
 
   ASSERT_TRUE(I.isApprox(T.linear(), EPS) && t.isApprox(T.translation(), EPS));
 }
 
 TEST(ca2lib, Testangle2RIdentity) {
   Eigen::Vector3f eul;
-  eul << 0,0,0;
+  eul << 0, 0, 0;
   Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-  
+
   Eigen::Matrix3f R = ca2lib::angle2R(eul);
 
   ASSERT_TRUE(I.isApprox(R, EPS));
@@ -104,37 +102,35 @@ TEST(ca2lib, Testangle2RIdentity) {
 
 TEST(ca2lib, Testangle2R) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
+  vec << 1, 2, 3;
 
   Eigen::Vector3f eul;
-  eul << 0.2,0.3,0.4;
-  
+  eul << 0.2, 0.3, 0.4;
+
   Eigen::Matrix3f R = ca2lib::angle2R(eul);
 
   Eigen::Vector3f rotated_vec;
-  rotated_vec << 1.0224,1.6260,3.2110;
+  rotated_vec << 1.0224, 1.6260, 3.2110;
 
   ASSERT_TRUE(rotated_vec.isApprox(R * vec, EPS));
 }
 
 TEST(ca2lib, Testv2t) {
   Eigen::Vector3f vec;
-  vec << 1,2,3;
+  vec << 1, 2, 3;
 
   ca2lib::Vector6f pose;
-  pose <<1,2,3,0.2,0.3,0.4;
+  pose << 1, 2, 3, 0.2, 0.3, 0.4;
 
   Eigen::Isometry3f T = ca2lib::v2t(pose);
 
   Eigen::Vector3f transfor_vec;
-  transfor_vec << 2.0224,3.6260,6.2110;
+  transfor_vec << 2.0224, 3.6260, 6.2110;
 
   ASSERT_TRUE(transfor_vec.isApprox(T * vec, EPS));
 }
-
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-

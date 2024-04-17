@@ -1,6 +1,6 @@
 // clang-format off
 
-// Copyright (c) 2023, S(apienza) R(obust) R(obotics) G(roup)
+// Copyright (c) 2023, Robotics Vision and Perception Group
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -58,7 +58,8 @@ bool PlaneExtractorMonocular::process() {
 
   float d = normal_in_camera.dot(target_in_camera_translation);
 
-  _plane.normal() << normal_in_camera.at<float>(0), normal_in_camera.at<float>(1), normal_in_camera.at<float>(2);
+  _plane.normal() << normal_in_camera.at<float>(0),
+      normal_in_camera.at<float>(1), normal_in_camera.at<float>(2);
   _plane.d() = d;
 
   return true;
