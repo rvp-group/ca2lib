@@ -114,6 +114,14 @@ int main(int argc, char** argv) {
   ArgumentFlag use_approx_sync(&parser, "a", "approx-sync",
                                "Use ApproximateTime synchronization policy "
                                "instead of ExactTime policy");
+  ArgumentFloat inlier_threshold(
+      &parser, "T", "threshold-inlier",
+      "Threshold for a measurement to be considered inlier", 3.0f);
+
+  ArgumentInt no_iterations(&parser, "n", "iterations",
+                            "Number of solver iterations", 10);
+  ArgumentFloat damping_factor(&parser, "d", "damping", "Damping factor", 10.f);
+  ArgumentFloat huber_delta(&parser, "u", "huber", "Huber threshold", 0.1f);
 
   parser.parse();
 
@@ -151,6 +159,14 @@ int main(int argc, char** argv) {
       nh, topic_cloud.value(), 10);
   message_filters::Subscriber<sensor_msgs::Image> sub_image(
       nh, topic_cam.value(), 10);
+
+  // Setup solver
+
+  solver.dumping() = damping_factor.value();
+  solver.iterations() = no_iterations.value();
+  solver.inlierTh() = inlier_threshold.value();
+  solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1,
+                                 std::placeholders::_2, huber_delta.value()));
 
   if (use_approx_sync.isSet()) {
     spdlog::info("Using ApproxTime synchronization policy");
@@ -322,11 +338,6 @@ void updateViewport(int key_pressed) {
           spdlog::info("Solving extrinsics camera_T_lidar");
           solver.estimate() = Eigen::Isometry3f::Identity();
           solver.measurements() = measurement_vect;
-          solver.dumping() = 10;
-          solver.iterations() = 10;
-          solver.inlierTh() = 3.f;
-          solver.setMEstimator(std::bind(ca2lib::huber, std::placeholders::_1,
-                                         std::placeholders::_2, 0.1f));
           solver.compute();
 
           std::cerr << solver.stats() << std::endl;

@@ -10,6 +10,9 @@ target_link_libraries(cloud_plane_estimator_interactive PRIVATE ca2lib)
 add_executable(stereo_recorder stereo_recorder.cpp)
 target_link_libraries(stereo_recorder PRIVATE ca2lib spdlog)
 
+add_executable(mono_recorder mono_recorder.cpp)
+target_link_libraries(mono_recorder PRIVATE ca2lib spdlog)
+
 add_executable(calibrate_camera calibrate_camera.cpp)
 target_link_libraries(calibrate_camera PRIVATE ca2lib spdlog)
 
