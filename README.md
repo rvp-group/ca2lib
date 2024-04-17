@@ -3,46 +3,7 @@ Ca2Lib is an open-source `LiDAR-Camera[RGB]` calibration toolbox.
 
 # 🚀 Usage
 
-To calibrate your camera(s), first generate a [target configuration file](todo), gather your sensors/bag and run:
-```bash
-rosrun ca2lib stereo_recorder \
-    -l <topic_camera_left> \
-    -r <topic_camera_right> \
-    -t <target.yaml> \
-    -o <output folder>
-```
-
-After enough views of the calibration target are acquired, run the calibration
-
-```bash
-rosrun ca2lib calibrate_camera \
-    -i <images folder> \
-    -t <target.yaml> \
-    -o <cam_results.yaml>
-```
-
-Onto the extrinsics!
-
-To calibrate the LiDAR relative pose, follow the calibration guide [Link Soon]() and run the following node
-
-```bash
-rosrun ca2lib calibrate_lidar_camera \
-    -c <camera_topic> \
-    -i <cam_intrinsics.yaml> \
-    -l <cloud_topic> \
-    -t <target.yaml> \
-    -o <lidar_in_cam.yaml>
-```
-
-Finally, visualize your setup reprojections:
-
-```bash
-rosrun ca2lib visualize_lidar_in_camera \
-    -c <camera_topic> \
-    -i <cam_intrinsics.yaml> \
-    -l <cloud_topic>
-    -e <lidar_in_cam.yaml>
-```
+You can follow our guide [here](https://github.com/rvp-group/ca2lib/wiki/Usage)
 
 # 👷 Setup
 
