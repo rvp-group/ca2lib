@@ -97,8 +97,16 @@ cv::Mat projectLidarLUT(const PointCloudXf& cloud_in,
     }
     int row = i / cols;
     if (contains_ring) row = p(fields.at("ring").first);
+    row = std::max(0, std::min(row, static_cast<int>(rows - 1)));
+
     const float az = atan2f(p(1), p(0));
-    const int col = cvRound(fx * az + (cols * 0.5f));
+    int col = cvRound(fx * az + (cols * 0.5f));
+    if (col < 0 || col >= cols) {
+      // ignore and mark as invalid
+      inverse_lut.emplace_back(false, cv::Point2i(0, 0)); 
+      continue;
+    }
+
     lut.at<int32_t>(row, col) = i;
     inverse_lut.emplace_back(true, cv::Point2i(col, row));
   }
