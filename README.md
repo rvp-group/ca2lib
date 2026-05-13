@@ -1,5 +1,5 @@
 ![](https://github.com/rvp-group/ca2lib/wiki/images/ca2lib_title.png)
-Ca2Lib is an open-source `LiDAR-Camera[RGB]` calibration toolbox.
+Ca2Lib is an open-source `LiDAR-Camera[RGB]` calibration toolbox. The great thing is that it is accurate, and you don't need any CNC; you can use an A3/A4 size target.
 
 # 🚀 Usage
 
